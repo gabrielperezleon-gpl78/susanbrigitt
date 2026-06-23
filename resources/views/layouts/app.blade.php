@@ -29,13 +29,17 @@
             <nav class="flex-1 space-y-1 px-4">
 
                 <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm">
+                    class="{{ request()->routeIs('dashboard') 
+            ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
+            : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>⌂</span>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="#"
-                    class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
+                <a href="{{ route('products.index') }}"
+                    class="{{ request()->routeIs('products.*') 
+            ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
+            : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>▣</span>
                     <span>Productos</span>
                 </a>
