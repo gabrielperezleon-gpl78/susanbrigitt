@@ -99,7 +99,7 @@
 
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-black/5">
+    <div class="max-w-full overflow-x-auto rounded-xl border border-black/5">
         <table class="min-w-[1120px] w-full text-left text-sm">
             <thead class="bg-[#F8F5F2] text-gray-500">
                 <tr>

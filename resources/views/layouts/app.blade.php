@@ -9,19 +9,26 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-[#F8F5F2] text-[#171717]">
+<body class="min-h-screen bg-[#F8F5F2] text-[#171717]" x-data="{ sidebarOpen: true }">
 
     <div class="flex min-h-screen">
 
-        <aside class="fixed left-0 top-0 z-30 flex h-screen w-64 flex-col bg-[#17191D] text-white">
+        <aside
+            class="fixed left-0 top-0 z-30 flex h-screen flex-col bg-[#17191D] text-white transition-all duration-300"
+            :class="sidebarOpen ? 'w-64' : 'w-20'">
 
-            <div class="px-8 py-8">
+            <div class="px-4 py-8">
                 <div class="text-center">
-                    <div class="text-3xl font-semibold tracking-tight">
+                    <div x-show="sidebarOpen" class="text-3xl font-semibold tracking-tight">
                         Susan Brigitt
                     </div>
-                    <div class="mt-1 text-xs uppercase tracking-[0.35em] text-[#C9A15D]">
+
+                    <div x-show="sidebarOpen" class="mt-1 text-xs uppercase tracking-[0.35em] text-[#C9A15D]">
                         Studio
+                    </div>
+
+                    <div x-show="!sidebarOpen" class="text-2xl font-bold text-[#C9A15D]">
+                        SB
                     </div>
                 </div>
             </div>
@@ -33,7 +40,7 @@
             ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
             : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>⌂</span>
-                    <span>Dashboard</span>
+                    <span x-show="sidebarOpen">Dashboard</span>
                 </a>
 
                 <a href="{{ route('products.index') }}"
@@ -41,19 +48,19 @@
             ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
             : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>▣</span>
-                    <span>Productos</span>
+                    <span x-show="sidebarOpen">Productos</span>
                 </a>
 
                 <a href="#"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
                     <span>▤</span>
-                    <span>Compras</span>
+                    <span x-show="sidebarOpen">Compras</span>
                 </a>
 
                 <a href="#"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
                     <span>↗</span>
-                    <span>Ventas</span>
+                    <span x-show="sidebarOpen">Ventas</span>
                 </a>
 
                 <a href="{{ route('inventory.index') }}"
@@ -61,35 +68,36 @@
         ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
         : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>◈</span>
-                    <span>Inventario</span>
+                    <span x-show="sidebarOpen">Inventario</span>
                 </a>
 
                 <a href="#"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
                     <span>$</span>
-                    <span>Tasas de cambio</span>
+                    <span x-show="sidebarOpen">Tasas de cambio</span>
                 </a>
 
                 <a href="#"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
                     <span>□</span>
-                    <span>Reportes</span>
+                    <span x-show="sidebarOpen">Reportes</span>
                 </a>
 
                 <a href="#"
                     class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
                     <span>⚙</span>
-                    <span>Configuración</span>
+                    <span x-show="sidebarOpen">Configuración</span>
                 </a>
 
             </nav>
 
             <div class="border-t border-white/10 p-5">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3C8D1] text-sm font-bold text-[#7C3A48]">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3C8D1] text-sm font-bold text-[#7C3A48]">
                         S
                     </div>
-                    <div>
+
+                    <div x-show="sidebarOpen">
                         <div class="text-sm font-semibold">Susan</div>
                         <div class="text-xs text-gray-400">Administradora</div>
                     </div>
@@ -98,18 +106,30 @@
 
         </aside>
 
-        <main class="ml-64 min-h-screen flex-1">
+        <main
+            class="min-h-screen flex-1 transition-all duration-300"
+            :class="sidebarOpen ? 'ml-64' : 'ml-20'">
 
             <header class="sticky top-0 z-20 border-b border-black/5 bg-[#F8F5F2]/90 backdrop-blur">
                 <div class="flex items-center justify-between px-8 py-5">
 
-                    <div>
-                        <h1 class="text-2xl font-bold">
-                            {{ $pageTitle ?? 'Dashboard' }}
-                        </h1>
-                        <p class="mt-1 text-sm text-gray-500">
-                            Gestión administrativa de inventario, compras y ventas.
-                        </p>
+                    <div class="flex items-center gap-4">
+                        <button
+                            type="button"
+                            @click="sidebarOpen = !sidebarOpen"
+                            class="flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 bg-white text-xl shadow-sm transition hover:bg-gray-50"
+                            title="Mostrar u ocultar menú">
+                            ☰
+                        </button>
+
+                        <div>
+                            <h1 class="text-2xl font-bold">
+                                {{ $pageTitle ?? 'Dashboard' }}
+                            </h1>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Gestión administrativa de inventario, compras y ventas.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-3">
