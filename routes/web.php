@@ -9,3 +9,5 @@ Route::view('/dashboard', 'dashboard.index')->name('dashboard');
 Route::view('/productos', 'products.index')->name('products.index');
 
 Route::view('/productos/nuevo', 'products.create')->name('products.create');
+
+Route::view('/inventario', 'inventory.index')->name('inventory.index');
