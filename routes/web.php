@@ -23,3 +23,5 @@ Route::view('/ventas/nueva', 'sales.create')->name('sales.create');
 Route::view('/tasas', 'exchange-rates.index')->name('exchange-rates.index');
 
 Route::view('/tasas/nueva', 'exchange-rates.create')->name('exchange-rates.create');
+
+Route::view('/reportes', 'reports.index')->name('reports.index');

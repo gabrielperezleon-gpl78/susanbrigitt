@@ -83,8 +83,10 @@
                     <span x-show="sidebarOpen">Tasas de cambio</span>
                 </a>
 
-                <a href="#"
-                    class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
+                <a href="{{ route('reports.index') }}"
+                    class="{{ request()->routeIs('reports.*') 
+        ? 'flex items-center gap-3 rounded-xl bg-[#E46F8A] px-4 py-3 text-sm font-medium text-white shadow-sm' 
+        : 'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white' }}">
                     <span>□</span>
                     <span x-show="sidebarOpen">Reportes</span>
                 </a>
