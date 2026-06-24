@@ -15,3 +15,7 @@ Route::view('/inventario', 'inventory.index')->name('inventory.index');
 Route::view('/compras', 'purchases.index')->name('purchases.index');
 
 Route::view('/compras/nueva', 'purchases.create')->name('purchases.create');
+
+Route::view('/ventas', 'sales.index')->name('sales.index');
+
+Route::view('/ventas/nueva', 'sales.create')->name('sales.create');
