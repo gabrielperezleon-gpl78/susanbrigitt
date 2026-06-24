@@ -108,7 +108,7 @@
                     <td class="px-5 py-4">Bs. 602,40</td>
                     <td class="px-5 py-4 font-semibold text-green-600">$7,00</td>
                     <td class="px-5 py-4">
-                        <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        <span class="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                             Pago móvil
                         </span>
                     </td>
@@ -156,7 +156,7 @@
                     <td class="px-5 py-4">Bs. 258,44</td>
                     <td class="px-5 py-4 font-semibold text-green-600">$3,20</td>
                     <td class="px-5 py-4">
-                        <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                        <span class="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                             Efectivo USD
                         </span>
                     </td>
