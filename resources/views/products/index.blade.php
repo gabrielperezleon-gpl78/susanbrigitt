@@ -22,22 +22,22 @@
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">Productos activos</p>
-        <h2 class="mt-3 text-3xl font-bold">96</h2>
+        <h2 class="mt-3 text-3xl font-bold">{{ $totalProducts }}</h2>
     </div>
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">Unidades disponibles</p>
-        <h2 class="mt-3 text-3xl font-bold">186</h2>
+        <h2 class="mt-3 text-3xl font-bold">{{ $availableUnits }}</h2>
     </div>
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">Productos agotados</p>
-        <h2 class="mt-3 text-3xl font-bold text-[#E46F8A]">6</h2>
+        <h2 class="mt-3 text-3xl font-bold text-[#E46F8A]">{{ $outOfStockProducts }}</h2>
     </div>
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">Valor inventario</p>
-        <h2 class="mt-3 text-3xl font-bold">$2.850,00</h2>
+        <h2 class="mt-3 text-3xl font-bold">${{ number_format($inventoryValue, 2, ',', '.') }}</h2>
     </div>
 
 </section>
@@ -99,93 +99,75 @@
 
             <tbody class="divide-y divide-black/5">
 
+                @forelse ($products as $product)
                 <tr>
-                    <td class="whitespace-nowrap px-5 py-4 font-medium">SB-0001</td>
-                    <td class="px-5 py-4">Base líquida</td>
-                    <td class="px-5 py-4">Vogue</td>
-                    <td class="px-5 py-4">Beige claro</td>
-                    <td class="px-5 py-4">17</td>
-                    <td class="px-5 py-4">$4,50</td>
-                    <td class="px-5 py-4">$8,00</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$3,50</td>
-                    <td class="px-5 py-4">
-                        <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                            Disponible
-                        </span>
+                    <td class="whitespace-nowrap px-5 py-4 font-medium">
+                        {{ $product->internal_code }}
                     </td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
 
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4 font-medium">SB-0002</td>
-                    <td class="px-5 py-4">Labial mate</td>
-                    <td class="px-5 py-4">Valmy</td>
-                    <td class="px-5 py-4">Rojo intenso</td>
-                    <td class="px-5 py-4 text-[#E46F8A]">3</td>
-                    <td class="px-5 py-4">$2,00</td>
-                    <td class="px-5 py-4">$4,50</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$2,50</td>
                     <td class="px-5 py-4">
-                        <span class="rounded-full bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
-                            Stock bajo
-                        </span>
+                        {{ $product->name }}
                     </td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
 
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4 font-medium">SB-0003</td>
-                    <td class="px-5 py-4">Máscara de pestañas</td>
-                    <td class="px-5 py-4">Maybelline</td>
-                    <td class="px-5 py-4">Negro</td>
-                    <td class="px-5 py-4 text-[#E46F8A]">0</td>
-                    <td class="px-5 py-4">$3,80</td>
-                    <td class="px-5 py-4">$7,00</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$3,20</td>
                     <td class="px-5 py-4">
-                        <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                        {{ $product->brand?->name ?? 'Sin marca' }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        {{ $product->tone?->name ?? 'Sin tono' }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        {{ $product->current_stock }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        ${{ number_format((float) $product->purchase_price_usd, 2, ',', '.') }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        ${{ number_format((float) $product->sale_price_usd, 2, ',', '.') }}
+                    </td>
+
+                    <td class="px-5 py-4 font-semibold text-green-600">
+                        ${{ number_format((float) $product->unit_profit_usd, 2, ',', '.') }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        @if ($product->stock_status === 'agotado')
+                        <span class="whitespace-nowrap rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                             Agotado
                         </span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4 font-medium">SB-0004</td>
-                    <td class="px-5 py-4">Corrector líquido</td>
-                    <td class="px-5 py-4">Vogue</td>
-                    <td class="px-5 py-4">Beige natural</td>
-                    <td class="px-5 py-4">8</td>
-                    <td class="px-5 py-4">$2,80</td>
-                    <td class="px-5 py-4">$5,50</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$2,70</td>
-                    <td class="px-5 py-4">
-                        <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                        @elseif ($product->stock_status === 'stock_bajo')
+                        <span class="whitespace-nowrap rounded-full bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
+                            Stock bajo
+                        </span>
+                        @else
+                        <span class="whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                             Disponible
                         </span>
+                        @endif
                     </td>
+
                     <td class="px-5 py-4">
                         <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
+                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
+                                Ver
+                            </button>
+
+                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
+                                Editar
+                            </button>
                         </div>
                     </td>
                 </tr>
+                @empty
+                <tr>
+                    <td colspan="10" class="px-5 py-10 text-center text-gray-500">
+                        No hay productos registrados.
+                    </td>
+                </tr>
+                @endforelse
 
             </tbody>
         </table>
