@@ -19,3 +19,7 @@ Route::view('/compras/nueva', 'purchases.create')->name('purchases.create');
 Route::view('/ventas', 'sales.index')->name('sales.index');
 
 Route::view('/ventas/nueva', 'sales.create')->name('sales.create');
+
+Route::view('/tasas', 'exchange-rates.index')->name('exchange-rates.index');
+
+Route::view('/tasas/nueva', 'exchange-rates.create')->name('exchange-rates.create');
