@@ -16,6 +16,7 @@ class PurchaseItem extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
         'unit_cost_usd' => 'decimal:2',
         'total_usd' => 'decimal:2',
     ];

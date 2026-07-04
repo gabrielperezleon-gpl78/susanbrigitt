@@ -17,7 +17,9 @@ Route::get('/inventario', [InventoryController::class, 'index'])->name('inventor
 
 Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
 
-Route::view('/compras/nueva', 'purchases.create')->name('purchases.create');
+Route::get('/compras/nueva', [PurchaseController::class, 'create'])->name('purchases.create');
+
+Route::post('/compras', [PurchaseController::class, 'store'])->name('purchases.store');
 
 Route::view('/ventas', 'sales.index')->name('sales.index');
 

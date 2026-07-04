@@ -10,8 +10,8 @@ class InventoryMovement extends Model
 {
     protected $fillable = [
         'product_id',
-        'movementable_id',
         'movementable_type',
+        'movementable_id',
         'type',
         'quantity',
         'stock_after_movement',
@@ -20,6 +20,8 @@ class InventoryMovement extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
+        'stock_after_movement' => 'integer',
         'movement_date' => 'date',
     ];
 

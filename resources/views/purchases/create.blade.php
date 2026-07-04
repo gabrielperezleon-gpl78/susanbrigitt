@@ -14,7 +14,40 @@
     </p>
 </div>
 
-<form class="space-y-6">
+@if ($errors->any())
+<div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+    <p class="font-bold">Revisa los datos del formulario.</p>
+
+    <ul class="mt-2 list-inside list-disc space-y-1">
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+<form
+    action="{{ route('purchases.store') }}"
+    method="POST"
+    class="space-y-6"
+    x-data="{
+        quantity: @js((float) old('quantity', 1)),
+        unitCostUsd: @js((float) old('unit_cost_usd', 0)),
+        exchangeRateValue: @js((float) old('exchange_rate_value', $latestExchangeRate?->used_rate ?? 0)),
+        get totalUsd() {
+            return this.quantity * this.unitCostUsd;
+        },
+        get totalBs() {
+            return this.totalUsd * this.exchangeRateValue;
+        },
+        formatNumber(value) {
+            return new Intl.NumberFormat('es-VE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value || 0);
+        }
+    }">
+    @csrf
 
     <section class="rounded-2xl border border-black/5 bg-white shadow-sm">
 
@@ -28,57 +61,93 @@
         <div class="grid gap-5 p-6 md:grid-cols-2 xl:grid-cols-3">
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="purchase_date" class="mb-2 block text-sm font-semibold text-gray-700">
                     Fecha de compra <span class="text-[#E46F8A]">*</span>
                 </label>
-                <input type="date" value="2024-05-21"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <input
+                    id="purchase_date"
+                    name="purchase_date"
+                    type="date"
+                    value="{{ old('purchase_date', now()->toDateString()) }}"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="supplier_id" class="mb-2 block text-sm font-semibold text-gray-700">
                     Proveedor <span class="text-[#E46F8A]">*</span>
                 </label>
-                <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <option>Proveedoría Beauty C.A.</option>
-                    <option>Distribuidora Glam</option>
-                    <option>Importadora Cosmo</option>
+                <select
+                    id="supplier_id"
+                    name="supplier_id"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
+                    <option value="">Seleccionar proveedor</option>
+                    @foreach ($suppliers as $supplier)
+                    <option value="{{ $supplier->id }}" @selected(old('supplier_id')==$supplier->id)>
+                        {{ $supplier->name }}
+                    </option>
+                    @endforeach
                 </select>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="product_id" class="mb-2 block text-sm font-semibold text-gray-700">
                     Producto <span class="text-[#E46F8A]">*</span>
                 </label>
-                <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <option>Base líquida · Vogue · Beige claro</option>
-                    <option>Labial mate · Valmy · Rojo intenso</option>
-                    <option>Máscara de pestañas · Maybelline · Negro</option>
+                <select
+                    id="product_id"
+                    name="product_id"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
+                    <option value="">Seleccionar producto</option>
+                    @foreach ($products as $product)
+                    <option value="{{ $product->id }}" @selected(old('product_id')==$product->id)>
+                        {{ $product->name }} · Stock actual: {{ $product->current_stock }}
+                    </option>
+                    @endforeach
                 </select>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="quantity" class="mb-2 block text-sm font-semibold text-gray-700">
                     Cantidad comprada <span class="text-[#E46F8A]">*</span>
                 </label>
-                <input type="number" value="20"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="{{ old('quantity', 1) }}"
+                    x-model.number="quantity"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="unit_cost_usd" class="mb-2 block text-sm font-semibold text-gray-700">
                     Costo unitario USD <span class="text-[#E46F8A]">*</span>
                 </label>
-                <input type="text" value="$4,50"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <input
+                    id="unit_cost_usd"
+                    name="unit_cost_usd"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value="{{ old('unit_cost_usd') }}"
+                    x-model.number="unitCostUsd"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
             </div>
 
             <div>
                 <label class="mb-2 block text-sm font-semibold text-gray-700">
                     Total compra USD
                 </label>
-                <input type="text" value="$90,00" readonly
-                    class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold outline-none">
+                <div class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold">
+                    $<span x-text="formatNumber(totalUsd)"></span>
+                </div>
             </div>
 
         </div>
@@ -96,43 +165,77 @@
 
         <div class="grid gap-5 p-6 md:grid-cols-2 xl:grid-cols-4">
 
+            <input
+                type="hidden"
+                name="exchange_rate_id"
+                value="{{ old('exchange_rate_id', $latestExchangeRate?->id) }}">
+
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="rate_source" class="mb-2 block text-sm font-semibold text-gray-700">
                     Fuente de tasa <span class="text-[#E46F8A]">*</span>
                 </label>
-                <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <option>Binance</option>
-                    <option>BCV</option>
-                    <option>Manual</option>
+
+                @php
+                $selectedRateSource = old('rate_source', $latestExchangeRate?->source ?? 'manual');
+                @endphp
+
+                <select
+                    id="rate_source"
+                    name="rate_source"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
+                    <option value="binance" @selected($selectedRateSource==='binance' )>Binance</option>
+                    <option value="bcv" @selected($selectedRateSource==='bcv' )>BCV</option>
+                    <option value="manual" @selected($selectedRateSource==='manual' )>Manual</option>
                 </select>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                <label for="exchange_rate_value" class="mb-2 block text-sm font-semibold text-gray-700">
                     Tasa aplicada <span class="text-[#E46F8A]">*</span>
                 </label>
-                <input type="text" value="37,65"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <input
+                    id="exchange_rate_value"
+                    name="exchange_rate_value"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value="{{ old('exchange_rate_value', $latestExchangeRate?->used_rate) }}"
+                    x-model.number="exchangeRateValue"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
             </div>
 
             <div>
                 <label class="mb-2 block text-sm font-semibold text-gray-700">
                     Total Bs
                 </label>
-                <input type="text" value="Bs. 3.388,50" readonly
-                    class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold outline-none">
+                <div class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold">
+                    Bs. <span x-text="formatNumber(totalBs)"></span>
+                </div>
             </div>
 
             <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
-                    Forma de pago
+                <label for="payment_method" class="mb-2 block text-sm font-semibold text-gray-700">
+                    Forma de pago <span class="text-[#E46F8A]">*</span>
                 </label>
-                <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <option>Pago móvil</option>
-                    <option>Transferencia Bs</option>
-                    <option>Efectivo USD</option>
-                    <option>Binance</option>
-                    <option>Zelle</option>
+
+                @php
+                $selectedPaymentMethod = old('payment_method');
+                @endphp
+
+                <select
+                    id="payment_method"
+                    name="payment_method"
+                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    required>
+                    <option value="">Seleccionar forma de pago</option>
+                    <option value="pago_movil" @selected($selectedPaymentMethod==='pago_movil' )>Pago móvil</option>
+                    <option value="transferencia_bs" @selected($selectedPaymentMethod==='transferencia_bs' )>Transferencia Bs</option>
+                    <option value="efectivo_usd" @selected($selectedPaymentMethod==='efectivo_usd' )>Efectivo USD</option>
+                    <option value="binance" @selected($selectedPaymentMethod==='binance' )>Binance</option>
+                    <option value="zelle" @selected($selectedPaymentMethod==='zelle' )>Zelle</option>
+                    <option value="mixto" @selected($selectedPaymentMethod==='mixto' )>Mixto</option>
                 </select>
             </div>
 
@@ -144,26 +247,25 @@
 
         <h2 class="text-lg font-bold">Resumen de ingreso</h2>
 
-        <div class="mt-6 grid gap-4 md:grid-cols-4">
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
 
             <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
                 <p class="text-sm text-gray-500">Unidades ingresadas</p>
-                <h3 class="mt-2 text-2xl font-bold">20</h3>
+                <h3 class="mt-2 text-2xl font-bold" x-text="quantity || 0"></h3>
             </div>
 
             <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
                 <p class="text-sm text-gray-500">Total USD</p>
-                <h3 class="mt-2 text-2xl font-bold">$90,00</h3>
-            </div>
-
-            <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
-                <p class="text-sm text-gray-500">Total Bs</p>
-                <h3 class="mt-2 text-2xl font-bold">Bs. 3.388,50</h3>
+                <h3 class="mt-2 text-2xl font-bold">
+                    $<span x-text="formatNumber(totalUsd)"></span>
+                </h3>
             </div>
 
             <div class="rounded-2xl bg-[#FFF0F4] p-5 text-center">
-                <p class="text-sm text-gray-500">Stock resultante</p>
-                <h3 class="mt-2 text-2xl font-bold text-[#E46F8A]">37</h3>
+                <p class="text-sm text-gray-500">Total Bs</p>
+                <h3 class="mt-2 text-2xl font-bold text-[#E46F8A]">
+                    Bs. <span x-text="formatNumber(totalBs)"></span>
+                </h3>
             </div>
 
         </div>
@@ -174,25 +276,33 @@
 
         <h2 class="text-lg font-bold">Observaciones</h2>
 
-        <textarea rows="4"
+        <textarea
+            id="notes"
+            name="notes"
+            rows="4"
             placeholder="Agrega notas sobre esta compra, proveedor, condiciones de pago o cualquier detalle relevante..."
-            class="mt-5 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"></textarea>
+            class="mt-5 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">{{ old('notes') }}</textarea>
 
     </section>
 
     <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
         <div class="grid gap-4 md:grid-cols-3">
-            <a href="{{ route('purchases.index') }}"
+            <a
+                href="{{ route('purchases.index') }}"
                 class="rounded-xl border border-black/10 px-5 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
                 Cancelar
             </a>
 
-            <button type="button"
-                class="rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A] transition hover:bg-[#FFF0F4]">
+            <button
+                type="button"
+                disabled
+                class="rounded-xl border border-black/10 px-5 py-3 text-sm font-semibold text-gray-400"
+                title="Se implementará más adelante">
                 Guardar borrador
             </button>
 
-            <button type="button"
+            <button
+                type="submit"
                 class="rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
                 Registrar compra
             </button>
