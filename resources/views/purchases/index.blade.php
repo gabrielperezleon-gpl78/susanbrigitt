@@ -1,155 +1,181 @@
-@extends('layouts.app', [
-'title' => 'Compras | Susan Brigitt Studio',
-'pageTitle' => 'Compras'
-])
+@extends('layouts.app')
+
+@section('title', 'Compras')
 
 @section('content')
+<div class="space-y-8">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+            <p class="text-sm font-medium uppercase tracking-[0.24em] text-rose-400">
+                Gestión de compras
+            </p>
 
-<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-    <div>
-        <p class="text-sm text-gray-500">
-            Registra ingresos de mercancía, costos de compra, proveedor y tasa de cambio aplicada.
-        </p>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">
+                Compras registradas
+            </h1>
+
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                Consulta las compras realizadas, proveedores asociados, productos adquiridos, tasas aplicadas y montos convertidos a bolívares.
+            </p>
+        </div>
+
+        <a
+            href="{{ route('purchases.create') }}"
+            class="inline-flex items-center justify-center border border-zinc-900 bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700">
+            Registrar compra
+        </a>
     </div>
 
-    <a href="{{ route('purchases.create') }}"
-        class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
-        + Registrar compra
-    </a>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="border border-zinc-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+                Compras
+            </p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">
+                {{ number_format($totalPurchases, 0, ',', '.') }}
+            </p>
+        </div>
+
+        <div class="border border-zinc-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+                Unidades compradas
+            </p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">
+                {{ number_format($totalUnits, 0, ',', '.') }}
+            </p>
+        </div>
+
+        <div class="border border-zinc-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+                Total USD
+            </p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">
+                ${{ number_format($totalUsd, 2, ',', '.') }}
+            </p>
+        </div>
+
+        <div class="border border-zinc-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+                Total Bs.
+            </p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">
+                Bs. {{ number_format($totalBs, 2, ',', '.') }}
+            </p>
+        </div>
+
+        <div class="border border-zinc-200 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+                Tasa promedio
+            </p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">
+                {{ $averageRate ? number_format($averageRate, 2, ',', '.') : '—' }}
+            </p>
+        </div>
+    </div>
+
+    <div class="overflow-hidden border border-zinc-200 bg-white shadow-sm">
+        <div class="border-b border-zinc-200 px-5 py-4">
+            <h2 class="text-base font-semibold text-zinc-900">
+                Historial de compras
+            </h2>
+
+            <p class="mt-1 text-sm text-zinc-500">
+                Registro operativo de entradas de mercancía al inventario.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-zinc-200">
+                <thead class="bg-zinc-50">
+                    <tr>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Fecha
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Proveedor
+                        </th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Productos
+                        </th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Unidades
+                        </th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Total USD
+                        </th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Tasa
+                        </th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Total Bs.
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-zinc-100 bg-white">
+                    @forelse ($purchases as $purchase)
+                    @php
+                    $purchaseDate = $purchase->purchase_date
+                    ? \Carbon\Carbon::parse($purchase->purchase_date)->format('d/m/Y')
+                    : $purchase->created_at->format('d/m/Y');
+                    @endphp
+
+                    <tr class="transition hover:bg-rose-50/40">
+                        <td class="whitespace-nowrap px-5 py-4 text-sm text-zinc-600">
+                            {{ $purchaseDate }}
+                        </td>
+
+                        <td class="px-5 py-4 text-sm font-medium text-zinc-900">
+                            {{ $purchase->supplier->name ?? 'Sin proveedor' }}
+                        </td>
+
+                        <td class="px-5 py-4 text-sm text-zinc-600">
+                            <div class="space-y-1">
+                                @foreach ($purchase->items as $item)
+                                <div>
+                                    <span class="font-medium text-zinc-800">
+                                        {{ $item->product->name ?? 'Producto eliminado' }}
+                                    </span>
+                                    <span class="text-zinc-400">
+                                        × {{ number_format($item->quantity, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-zinc-600">
+                            {{ number_format($purchase->items->sum('quantity'), 0, ',', '.') }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-zinc-900">
+                            ${{ number_format((float) ($purchase->total_usd ?? 0), 2, ',', '.') }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-zinc-600">
+                            {{ $purchase->exchange_rate_value ? number_format((float) $purchase->exchange_rate_value, 2, ',', '.') : '—' }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-zinc-900">
+                            Bs. {{ number_format((float) ($purchase->total_bs ?? 0), 2, ',', '.') }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center">
+                            <p class="text-sm font-medium text-zinc-900">
+                                Todavía no hay compras registradas.
+                            </p>
+
+                            <p class="mt-1 text-sm text-zinc-500">
+                                Cuando registres compras, aparecerán en este historial.
+                            </p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
-<section class="grid grid-cols-1 gap-5 md:grid-cols-4">
-
-    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Compras del mes</p>
-        <h2 class="mt-3 text-3xl font-bold">$820,00</h2>
-    </div>
-
-    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Unidades ingresadas</p>
-        <h2 class="mt-3 text-3xl font-bold">134</h2>
-    </div>
-
-    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Proveedores activos</p>
-        <h2 class="mt-3 text-3xl font-bold">8</h2>
-    </div>
-
-    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Última tasa usada</p>
-        <h2 class="mt-3 text-3xl font-bold">37,65</h2>
-    </div>
-
-</section>
-
-<section class="mt-6 rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-
-    <div class="mb-6 grid gap-4 md:grid-cols-5">
-
-        <input type="text"
-            placeholder="Buscar compra..."
-            class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Proveedor</option>
-            <option>Proveedoría Beauty C.A.</option>
-            <option>Distribuidora Glam</option>
-            <option>Importadora Cosmo</option>
-        </select>
-
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Fuente tasa</option>
-            <option>BCV</option>
-            <option>Binance</option>
-            <option>Manual</option>
-        </select>
-
-        <input type="date"
-            class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-
-        <button class="rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A] transition hover:bg-[#FFF0F4]">
-            Filtrar
-        </button>
-
-    </div>
-
-    <div class="max-w-full overflow-x-auto rounded-xl border border-black/5">
-        <table class="min-w-[1120px] w-full text-left text-sm">
-            <thead class="bg-[#F8F5F2] text-gray-500">
-                <tr>
-                    <th class="whitespace-nowrap px-5 py-4">Fecha</th>
-                    <th class="whitespace-nowrap px-5 py-4">Proveedor</th>
-                    <th class="whitespace-nowrap px-5 py-4">Producto</th>
-                    <th class="whitespace-nowrap px-5 py-4">Marca</th>
-                    <th class="whitespace-nowrap px-5 py-4">Cantidad</th>
-                    <th class="whitespace-nowrap px-5 py-4">Costo unit. USD</th>
-                    <th class="whitespace-nowrap px-5 py-4">Total USD</th>
-                    <th class="whitespace-nowrap px-5 py-4">Tasa</th>
-                    <th class="whitespace-nowrap px-5 py-4">Total Bs</th>
-                    <th class="whitespace-nowrap px-5 py-4">Acciones</th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-black/5">
-
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4">21/05/2024</td>
-                    <td class="px-5 py-4">Proveedoría Beauty C.A.</td>
-                    <td class="px-5 py-4 font-medium">Base líquida</td>
-                    <td class="px-5 py-4">Vogue</td>
-                    <td class="px-5 py-4 font-semibold">20</td>
-                    <td class="px-5 py-4">$4,50</td>
-                    <td class="px-5 py-4 font-semibold">$90,00</td>
-                    <td class="px-5 py-4">37,65</td>
-                    <td class="px-5 py-4">Bs. 3.388,50</td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4">20/05/2024</td>
-                    <td class="px-5 py-4">Distribuidora Glam</td>
-                    <td class="px-5 py-4 font-medium">Labial mate</td>
-                    <td class="px-5 py-4">Valmy</td>
-                    <td class="px-5 py-4 font-semibold">30</td>
-                    <td class="px-5 py-4">$2,00</td>
-                    <td class="px-5 py-4 font-semibold">$60,00</td>
-                    <td class="px-5 py-4">37,65</td>
-                    <td class="px-5 py-4">Bs. 2.259,00</td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4">18/05/2024</td>
-                    <td class="px-5 py-4">Importadora Cosmo</td>
-                    <td class="px-5 py-4 font-medium">Máscara de pestañas</td>
-                    <td class="px-5 py-4">Maybelline</td>
-                    <td class="px-5 py-4 font-semibold">15</td>
-                    <td class="px-5 py-4">$3,80</td>
-                    <td class="px-5 py-4 font-semibold">$57,00</td>
-                    <td class="px-5 py-4">36,92</td>
-                    <td class="px-5 py-4">Bs. 2.104,44</td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
-
-            </tbody>
-        </table>
-    </div>
-
-</section>
-
 @endsection

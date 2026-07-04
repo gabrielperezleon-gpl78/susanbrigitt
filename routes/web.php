@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PurchaseController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -14,7 +15,7 @@ Route::view('/productos/nuevo', 'products.create')->name('products.create');
 
 Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
 
-Route::view('/compras', 'purchases.index')->name('purchases.index');
+Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
 
 Route::view('/compras/nueva', 'purchases.create')->name('purchases.create');
 
