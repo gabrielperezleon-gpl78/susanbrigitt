@@ -74,6 +74,29 @@
                 </div>
 
                 <div class="grid gap-5 p-6 md:grid-cols-2">
+
+                    <div class="md:col-span-2">
+                        <label for="save_mode" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tipo de registro <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <select
+                            id="save_mode"
+                            name="save_mode"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                            <option value="create_new" @selected(old('save_mode', 'create_new' )==='create_new' )>
+                                Nueva tasa del día
+                            </option>
+                            <option value="update_existing" @selected(old('save_mode')==='update_existing' )>
+                                Corrección de la tasa registrada para esa fecha
+                            </option>
+                        </select>
+
+                        <p class="mt-2 text-xs leading-5 text-gray-500">
+                            Usa “Nueva tasa del día” cuando el dólar cambió durante el día. Usa “Corrección” si deseas reemplazar la última tasa guardada para esa fecha.
+                        </p>
+                    </div>
                     <div>
                         <label for="rate_date" class="mb-2 block text-sm font-semibold text-gray-700">
                             Fecha de la tasa <span class="text-[#E46F8A]">*</span>
@@ -87,7 +110,18 @@
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
+                    <div>
+                        <label for="rate_time" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Hora de referencia
+                        </label>
 
+                        <input
+                            id="rate_time"
+                            name="rate_time"
+                            type="time"
+                            value="{{ old('rate_time', now()->format('H:i')) }}"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                    </div>
                     <div>
                         <label for="source" class="mb-2 block text-sm font-semibold text-gray-700">
                             Fuente usada <span class="text-[#E46F8A]">*</span>

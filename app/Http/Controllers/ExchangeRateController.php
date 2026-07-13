@@ -58,7 +58,9 @@ class ExchangeRateController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'save_mode' => ['required', 'in:create_new,update_existing'],
             'rate_date' => ['required', 'date'],
+            'rate_time' => ['nullable', 'date_format:H:i'],
             'bcv_rate' => ['nullable', 'numeric', 'min:0.01'],
             'binance_rate' => ['nullable', 'numeric', 'min:0.01'],
             'manual_rate' => ['nullable', 'numeric', 'min:0.01'],
@@ -83,8 +85,9 @@ class ExchangeRateController extends Controller
                 ->withInput();
         }
 
-        ExchangeRate::create([
+        $payload = [
             'rate_date' => $validated['rate_date'],
+            'rate_time' => $validated['rate_time'] ?? now()->format('H:i'),
             'bcv_rate' => $validated['bcv_rate'] ?? null,
             'binance_rate' => $validated['binance_rate'] ?? null,
             'manual_rate' => $validated['manual_rate'] ?? null,
@@ -92,10 +95,35 @@ class ExchangeRateController extends Controller
             'source' => $validated['source'],
             'status' => $validated['status'],
             'notes' => $validated['notes'] ?? null,
-        ]);
+        ];
+
+        if ($validated['save_mode'] === 'update_existing') {
+            $exchangeRate = ExchangeRate::query()
+                ->whereDate('rate_date', $validated['rate_date'])
+                ->latest('id')
+                ->first();
+
+            if ($exchangeRate) {
+                $exchangeRate->update($payload);
+
+                return redirect()
+                    ->route('exchange-rates.index')
+                    ->with('success', 'Tasa de cambio corregida correctamente para la fecha seleccionada.');
+            }
+        }
+
+        ExchangeRate::create($payload);
 
         return redirect()
             ->route('exchange-rates.index')
-            ->with('success', 'Tasa de cambio registrada correctamente.');
+            ->with('success', 'Nueva tasa de cambio registrada correctamente.');
+
+        $message = $exchangeRate->wasRecentlyCreated
+            ? 'Tasa de cambio registrada correctamente.'
+            : 'Tasa de cambio actualizada correctamente para la fecha seleccionada.';
+
+        return redirect()
+            ->route('exchange-rates.index')
+            ->with('success', $message);
     }
 }
