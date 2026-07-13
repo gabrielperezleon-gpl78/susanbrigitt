@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExchangeRate extends Model
 {
@@ -25,14 +24,4 @@ class ExchangeRate extends Model
         'manual_rate' => 'decimal:4',
         'used_rate' => 'decimal:4',
     ];
-
-    public function purchases(): HasMany
-    {
-        return $this->hasMany(Purchase::class);
-    }
-
-    public function sales(): HasMany
-    {
-        return $this->hasMany(Sale::class);
-    }
 }

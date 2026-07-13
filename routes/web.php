@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ExchangeRateController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -25,8 +26,10 @@ Route::view('/ventas', 'sales.index')->name('sales.index');
 
 Route::view('/ventas/nueva', 'sales.create')->name('sales.create');
 
-Route::view('/tasas', 'exchange-rates.index')->name('exchange-rates.index');
+Route::get('/tasas', [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
 
-Route::view('/tasas/nueva', 'exchange-rates.create')->name('exchange-rates.create');
+Route::get('/tasas/nueva', [ExchangeRateController::class, 'create'])->name('exchange-rates.create');
+
+Route::post('/tasas', [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
 
 Route::view('/reportes', 'reports.index')->name('reports.index');
