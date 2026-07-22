@@ -53,6 +53,7 @@ class SaleController extends Controller
     public function create(): View
     {
         $products = Product::query()
+            ->with('unitMeasure')
             ->where('status', 'active')
             ->where('current_stock', '>', 0)
             ->orderBy('name')

@@ -49,6 +49,7 @@
             'stock' => (int) $product->current_stock,
             'sale_price_usd' => (float) $product->sale_price_usd,
             'purchase_price_usd' => (float) $product->purchase_price_usd,
+            'unit_measure' => $product->unitMeasure?->abbreviation ?? $product->unitMeasure?->name ?? '',
         ])->values()),
 
         productId: @js((int) old('product_id', 0)),
@@ -204,13 +205,15 @@ handleDecimalKey(event) {
                             <option value="">Seleccionar producto</option>
                             @foreach ($products as $product)
                             <option value="{{ $product->id }}" @selected(old('product_id')==$product->id)>
-                                {{ $product->name }} · Stock: {{ $product->current_stock }} · Venta: ${{ number_format((float) $product->sale_price_usd, 2, ',', '.') }}
+                                {{ $product->name }} · Stock: {{ $product->current_stock }} {{ $product->unitMeasure?->abbreviation ?? $product->unitMeasure?->name ?? '' }} · Venta: ${{ number_format((float) $product->sale_price_usd, 2, ',', '.') }}
                             </option>
                             @endforeach
                         </select>
 
                         <p class="mt-2 text-xs text-gray-400" x-show="selectedProduct">
-                            Stock actual seleccionado: <span x-text="selectedProduct?.stock || 0"></span> unidades.
+                            Stock actual seleccionado:
+                            <span x-text="selectedProduct?.stock || 0"></span>
+                            <span x-text="selectedProduct?.unit_measure || 'unidades'"></span>.
                         </p>
                     </div>
 

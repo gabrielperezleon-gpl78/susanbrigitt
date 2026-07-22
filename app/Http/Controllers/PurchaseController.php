@@ -62,6 +62,7 @@ class PurchaseController extends Controller
             ->get();
 
         $products = Product::query()
+            ->with('unitMeasure')
             ->where('status', 'active')
             ->orderBy('name')
             ->get();

@@ -17,7 +17,7 @@ class ProductController extends Controller
 {
     public function index(): View
     {
-        $products = Product::with(['category', 'brand', 'tone', 'supplier'])
+        $products = Product::with(['category', 'brand', 'tone', 'unitMeasure', 'supplier'])
             ->latest()
             ->get();
 

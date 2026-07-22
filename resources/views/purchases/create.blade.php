@@ -167,7 +167,7 @@
                     <option value="">Seleccionar producto</option>
                     @foreach ($products as $product)
                     <option value="{{ $product->id }}" @selected(old('product_id')==$product->id)>
-                        {{ $product->name }} · Stock actual: {{ $product->current_stock }}
+                        {{ $product->name }} · Stock actual: {{ $product->current_stock }} {{ $product->unitMeasure?->abbreviation ?? $product->unitMeasure?->name ?? '' }}
                     </option>
                     @endforeach
                 </select>

@@ -94,6 +94,7 @@
                     <th class="whitespace-nowrap px-5 py-4">Producto</th>
                     <th class="whitespace-nowrap px-5 py-4">Marca</th>
                     <th class="whitespace-nowrap px-5 py-4">Tono</th>
+                    <th class="whitespace-nowrap px-5 py-4">Unidad</th>
                     <th class="whitespace-nowrap px-5 py-4">Stock</th>
                     <th class="whitespace-nowrap px-5 py-4">Costo USD</th>
                     <th class="whitespace-nowrap px-5 py-4">Venta USD</th>
@@ -121,6 +122,10 @@
 
                     <td class="px-5 py-4">
                         {{ $product->tone?->name ?? 'Sin tono' }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        {{ $product->unitMeasure?->abbreviation ?? $product->unitMeasure?->name ?? 'Sin unidad' }}
                     </td>
 
                     <td class="px-5 py-4">
@@ -169,7 +174,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" class="px-5 py-10 text-center text-gray-500">
+                    <td colspan="11" class="px-5 py-10 text-center text-gray-500">
                         No hay productos registrados.
                     </td>
                 </tr>
