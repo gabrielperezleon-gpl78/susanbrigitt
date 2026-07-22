@@ -33,6 +33,10 @@ Route::get('/compras/nueva', [PurchaseController::class, 'create'])->name('purch
 
 Route::post('/compras', [PurchaseController::class, 'store'])->name('purchases.store');
 
+Route::get('/compras/{purchase}/editar', [PurchaseController::class, 'edit'])->name('purchases.edit');
+
+Route::put('/compras/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+
 Route::get('/ventas', [SaleController::class, 'index'])->name('sales.index');
 
 Route::get('/ventas/nueva', [SaleController::class, 'create'])->name('sales.create');

@@ -115,6 +115,9 @@
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                             Total Bs.
                         </th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                            Acciones
+                        </th>
                     </tr>
                 </thead>
 
@@ -165,10 +168,17 @@
                         <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-medium text-zinc-900">
                             Bs. {{ number_format((float) ($purchase->total_bs ?? 0), 2, ',', '.') }}
                         </td>
+                        <td class="whitespace-nowrap px-5 py-4 text-right">
+                            <a
+                                href="{{ route('purchases.edit', $purchase) }}"
+                                class="inline-flex rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                                Editar
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-12 text-center">
+                        <td colspan="8" class="px-5 py-12 text-center">
                             <p class="text-sm font-medium text-zinc-900">
                                 Todavía no hay compras registradas.
                             </p>
