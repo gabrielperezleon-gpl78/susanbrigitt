@@ -48,10 +48,52 @@
             binanceRate: @js((float) old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate ?? 0)),
             manualRate: @js((float) old('manual_rate', $latestRate?->manual_rate ?? 0)),
             get usedRate() {
-                if (this.source === 'bcv') return this.bcvRate;
-                if (this.source === 'manual') return this.manualRate;
-                return this.binanceRate;
-            },
+    if (this.source === 'bcv') return this.parseDecimal(this.bcvRate);
+    if (this.source === 'manual') return this.parseDecimal(this.manualRate);
+    return this.parseDecimal(this.binanceRate);
+},
+
+parseDecimal(value) {
+    if (value === null || value === undefined || value === '') return 0;
+
+    value = String(value)
+        .trim()
+        .replace(/\s/g, '')
+        .replace('$', '')
+        .replace('Bs.', '')
+        .replace('Bs', '');
+
+    const lastComma = value.lastIndexOf(',');
+    const lastDot = value.lastIndexOf('.');
+
+    if (lastComma !== -1 && lastDot !== -1) {
+        if (lastComma > lastDot) {
+            value = value.replace(/\./g, '').replace(',', '.');
+        } else {
+            value = value.replace(/,/g, '');
+        }
+    } else if (lastComma !== -1) {
+        value = value.replace(',', '.');
+    }
+
+    return Number(value) || 0;
+},
+
+handleDecimalKey(event) {
+    if (event.code !== 'NumpadDecimal') return;
+
+    event.preventDefault();
+
+    const input = event.target;
+    const separator = '.';
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    input.value = input.value.slice(0, start) + separator + input.value.slice(end);
+    input.setSelectionRange(start + 1, start + 1);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+},
+
             formatNumber(value) {
                 return new Intl.NumberFormat('es-VE', {
                     minimumFractionDigits: 2,
@@ -147,11 +189,13 @@
                         <input
                             id="bcv_rate"
                             name="bcv_rate"
-                            type="number"
+                            type="text"
+                            inputmode="decimal"
                             min="0.01"
                             step="0.0001"
                             value="{{ old('bcv_rate', $latestRate?->bcv_rate) }}"
                             x-model.number="bcvRate"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             placeholder="Ejemplo: 36.5000">
                     </div>
@@ -164,11 +208,13 @@
                         <input
                             id="binance_rate"
                             name="binance_rate"
-                            type="number"
+                            type="text"
+                            inputmode="decimal"
                             min="0.01"
                             step="0.0001"
                             value="{{ old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate) }}"
                             x-model.number="binanceRate"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             placeholder="Ejemplo: 37.8000">
 
@@ -193,11 +239,13 @@
                         <input
                             id="manual_rate"
                             name="manual_rate"
-                            type="number"
+                            type="text"
+                            inputmode="decimal"
                             min="0.01"
                             step="0.0001"
                             value="{{ old('manual_rate', $latestRate?->manual_rate) }}"
                             x-model.number="manualRate"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             placeholder="Ejemplo: 38.0000">
                     </div>

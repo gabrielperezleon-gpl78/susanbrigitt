@@ -32,8 +32,58 @@
     class="space-y-6"
     x-data="{
         quantity: @js((float) old('quantity', 1)),
-        unitCostUsd: @js((float) old('unit_cost_usd', 0)),
-        exchangeRateValue: @js((float) old('exchange_rate_value', $latestExchangeRate?->used_rate ?? 0)),
+        unitCostUsdInput: @js(old('unit_cost_usd', '')),
+exchangeRateValueInput: @js(old('exchange_rate_value', $latestExchangeRate?->used_rate ?? '')),
+
+parseDecimal(value) {
+    if (value === null || value === undefined || value === '') return 0;
+
+    value = String(value)
+        .trim()
+        .replace(/\s/g, '')
+        .replace('$', '')
+        .replace('Bs.', '')
+        .replace('Bs', '');
+
+    const lastComma = value.lastIndexOf(',');
+    const lastDot = value.lastIndexOf('.');
+
+    if (lastComma !== -1 && lastDot !== -1) {
+        if (lastComma > lastDot) {
+            value = value.replace(/\./g, '').replace(',', '.');
+        } else {
+            value = value.replace(/,/g, '');
+        }
+    } else if (lastComma !== -1) {
+        value = value.replace(',', '.');
+    }
+
+    return Number(value) || 0;
+},
+
+handleDecimalKey(event) {
+    if (event.code !== 'NumpadDecimal') return;
+
+    event.preventDefault();
+
+    const input = event.target;
+    const separator = '.';
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    input.value = input.value.slice(0, start) + separator + input.value.slice(end);
+    input.setSelectionRange(start + 1, start + 1);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+},
+
+get unitCostUsd() {
+    return this.parseDecimal(this.unitCostUsdInput);
+},
+
+get exchangeRateValue() {
+    return this.parseDecimal(this.exchangeRateValueInput);
+},
+
         get totalUsd() {
             return this.quantity * this.unitCostUsd;
         },
@@ -132,12 +182,12 @@
                 <input
                     id="unit_cost_usd"
                     name="unit_cost_usd"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
+                    type="text"
+                    inputmode="decimal"
                     value="{{ old('unit_cost_usd') }}"
-                    x-model.number="unitCostUsd"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    x-model="unitCostUsdInput"
+                    x-on:keydown="handleDecimalKey($event)"
+                    class="mt-2 w-full border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
                     required>
             </div>
 
@@ -197,12 +247,12 @@
                 <input
                     id="exchange_rate_value"
                     name="exchange_rate_value"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
+                    type="text"
+                    inputmode="decimal"
                     value="{{ old('exchange_rate_value', $latestExchangeRate?->used_rate) }}"
-                    x-model.number="exchangeRateValue"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    x-model="exchangeRateValueInput"
+                    x-on:keydown="handleDecimalKey($event)"
+                    class="mt-2 w-full border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
                     required>
             </div>
 
