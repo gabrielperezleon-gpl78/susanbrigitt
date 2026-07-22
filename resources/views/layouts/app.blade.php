@@ -140,18 +140,41 @@
                         </div>
                     </div>
 
+                    @php
+                    $headerNow = now(config('app.timezone', 'America/Caracas'))->locale('es');
+
+                    $headerDate = $headerNow->isoFormat('D [de] MMMM [de] YYYY');
+                    $headerTime = $headerNow->format('H:i');
+
+                    $headerExchangeRate = \App\Models\ExchangeRate::query()
+                    ->where('status', 'active')
+                    ->orderByDesc('rate_date')
+                    ->orderByDesc('rate_time')
+                    ->orderByDesc('id')
+                    ->first();
+
+                    $headerBcvRate = $headerExchangeRate?->bcv_rate;
+                    $headerBinanceRate = $headerExchangeRate?->binance_rate ?? $headerExchangeRate?->used_rate;
+                    @endphp
+
                     <div class="flex items-center gap-3">
 
-                        <div class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm shadow-sm">
-                            21 de mayo de 2024
+                        <div class="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm shadow-sm">
+                            {{ $headerDate }} · {{ $headerTime }}
                         </div>
 
-                        <div class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm shadow-sm">
-                            BCV: <strong>36,92</strong>
+                        <div class="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm shadow-sm">
+                            BCV:
+                            <span class="font-bold">
+                                {{ $headerBcvRate ? number_format((float) $headerBcvRate, 2, ',', '.') : '—' }}
+                            </span>
                         </div>
 
-                        <div class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm shadow-sm">
-                            Binance: <strong>37,65</strong>
+                        <div class="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm shadow-sm">
+                            Binance:
+                            <span class="font-bold">
+                                {{ $headerBinanceRate ? number_format((float) $headerBinanceRate, 2, ',', '.') : '—' }}
+                            </span>
                         </div>
 
                         <a
