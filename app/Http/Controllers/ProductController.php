@@ -141,13 +141,131 @@ class ProductController extends Controller
             ->with('success', 'Producto registrado correctamente.');
     }
 
-    private function generateUniqueSlug(string $name): string
+    public function show(Product $product): View
+    {
+        $product->load([
+            'category',
+            'brand',
+            'tone',
+            'unitMeasure',
+            'supplier',
+        ]);
+
+        return view('products.show', compact('product'));
+    }
+
+    public function edit(Product $product): View
+    {
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $brands = Brand::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $tones = Tone::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $unitMeasures = UnitMeasure::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $suppliers = Supplier::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('products.edit', compact(
+            'product',
+            'categories',
+            'brands',
+            'tones',
+            'unitMeasures',
+            'suppliers'
+        ));
+    }
+
+    public function update(Request $request, Product $product): RedirectResponse
+    {
+        $request->merge([
+            'purchase_price_usd' => $this->normalizeDecimal($request->input('purchase_price_usd')),
+            'sale_price_usd' => $this->normalizeDecimal($request->input('sale_price_usd')),
+        ]);
+
+        $validated = $request->validate([
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'brand_id' => ['nullable', 'exists:brands,id'],
+            'tone_id' => ['nullable', 'exists:tones,id'],
+            'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
+            'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
+            'name' => ['required', 'string', 'max:180'],
+            'barcode' => ['nullable', 'string', 'max:120', 'unique:products,barcode,' . $product->id],
+            'description' => ['nullable', 'string', 'max:1500'],
+            'purchase_price_usd' => ['required', 'numeric', 'min:0'],
+            'sale_price_usd' => ['required', 'numeric', 'min:0'],
+            'initial_stock' => ['required', 'integer', 'min:0'],
+            'current_stock' => ['required', 'integer', 'min:0'],
+            'minimum_stock' => ['required', 'integer', 'min:0'],
+            'entry_date' => ['nullable', 'date'],
+            'status' => ['required', 'in:active,inactive'],
+            'internal_notes' => ['nullable', 'string', 'max:1500'],
+        ]);
+
+        $purchasePriceUsd = round((float) $validated['purchase_price_usd'], 2);
+        $salePriceUsd = round((float) $validated['sale_price_usd'], 2);
+        $unitProfitUsd = round($salePriceUsd - $purchasePriceUsd, 2);
+
+        $profitMargin = $salePriceUsd > 0
+            ? round(($unitProfitUsd / $salePriceUsd) * 100, 2)
+            : 0;
+
+        $product->update([
+            'category_id' => $validated['category_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
+            'tone_id' => $validated['tone_id'] ?? null,
+            'unit_measure_id' => $validated['unit_measure_id'] ?? null,
+            'supplier_id' => $validated['supplier_id'] ?? null,
+            'internal_code' => $validated['internal_code'] ?? null,
+            'name' => $validated['name'],
+            'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
+            'barcode' => $validated['barcode'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'purchase_price_usd' => $purchasePriceUsd,
+            'sale_price_usd' => $salePriceUsd,
+            'unit_profit_usd' => $unitProfitUsd,
+            'profit_margin' => $profitMargin,
+            'initial_stock' => (int) $validated['initial_stock'],
+            'current_stock' => (int) $validated['current_stock'],
+            'minimum_stock' => (int) $validated['minimum_stock'],
+            'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
+            'status' => $validated['status'],
+            'internal_notes' => $validated['internal_notes'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Producto actualizado correctamente.');
+    }
+
+    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
     {
         $baseSlug = Str::slug($name);
         $slug = $baseSlug;
         $counter = 2;
 
-        while (Product::where('slug', $slug)->exists()) {
+        while (
+            Product::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn($query) => $query->where('id', '!=', $ignoreId))
+            ->exists()
+        ) {
             $slug = "{$baseSlug}-{$counter}";
             $counter++;
         }

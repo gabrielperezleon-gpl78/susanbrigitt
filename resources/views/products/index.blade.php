@@ -161,14 +161,18 @@
                     </td>
 
                     <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
+                        <div class="flex items-center gap-2">
+                            <a
+                                href="{{ route('products.show', $product) }}"
+                                class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
                                 Ver
-                            </button>
+                            </a>
 
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
+                            <a
+                                href="{{ route('products.edit', $product) }}"
+                                class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
                                 Editar
-                            </button>
+                            </a>
                         </div>
                     </td>
                 </tr>

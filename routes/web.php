@@ -19,6 +19,12 @@ Route::get('/productos/nuevo', [ProductController::class, 'create'])->name('prod
 
 Route::post('/productos', [ProductController::class, 'store'])->name('products.store');
 
+Route::get('/productos/{product}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])->name('products.edit');
+
+Route::put('/productos/{product}', [ProductController::class, 'update'])->name('products.update');
+
 Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
 
 Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
