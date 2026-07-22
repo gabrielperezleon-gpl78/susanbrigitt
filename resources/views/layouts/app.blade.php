@@ -154,9 +154,11 @@
                             Binance: <strong>37,65</strong>
                         </div>
 
-                        <button class="rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
+                        <a
+                            href="{{ route('sales.create') }}"
+                            class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
                             + Nueva venta
-                        </button>
+                        </a>
 
                     </div>
 
