@@ -53,4 +53,13 @@ Route::post('/catalogos/marcas', [CatalogController::class, 'storeBrand'])->name
 
 Route::post('/catalogos/unidades', [CatalogController::class, 'storeUnitMeasure'])->name('catalogs.unit-measures.store');
 
+Route::get('/catalogos/proveedores/{supplier}/editar', [CatalogController::class, 'editSupplier'])->name('catalogs.suppliers.edit');
+Route::put('/catalogos/proveedores/{supplier}', [CatalogController::class, 'updateSupplier'])->name('catalogs.suppliers.update');
+
+Route::get('/catalogos/marcas/{brand}/editar', [CatalogController::class, 'editBrand'])->name('catalogs.brands.edit');
+Route::put('/catalogos/marcas/{brand}', [CatalogController::class, 'updateBrand'])->name('catalogs.brands.update');
+
+Route::get('/catalogos/unidades/{unitMeasure}/editar', [CatalogController::class, 'editUnitMeasure'])->name('catalogs.unit-measures.edit');
+Route::put('/catalogos/unidades/{unitMeasure}', [CatalogController::class, 'updateUnitMeasure'])->name('catalogs.unit-measures.update');
+
 Route::view('/reportes', 'reports.index')->name('reports.index');

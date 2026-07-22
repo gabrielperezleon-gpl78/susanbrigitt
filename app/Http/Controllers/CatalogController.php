@@ -62,6 +62,30 @@ class CatalogController extends Controller
             ->with('success', 'Proveedor registrado correctamente.');
     }
 
+    public function editSupplier(Supplier $supplier): View
+    {
+        return view('catalogs.edit-supplier', compact('supplier'));
+    }
+
+    public function updateSupplier(Request $request, Supplier $supplier): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:180', 'unique:suppliers,name,' . $supplier->id],
+            'contact_name' => ['nullable', 'string', 'max:180'],
+            'phone' => ['nullable', 'string', 'max:80'],
+            'email' => ['nullable', 'email', 'max:180'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $supplier->update($validated);
+
+        return redirect()
+            ->route('catalogs.index')
+            ->with('success', 'Proveedor actualizado correctamente.');
+    }
+
     public function storeBrand(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -79,6 +103,31 @@ class CatalogController extends Controller
         return redirect()
             ->route('catalogs.index')
             ->with('success', 'Marca registrada correctamente.');
+    }
+
+    public function editBrand(Brand $brand): View
+    {
+        return view('catalogs.edit-brand', compact('brand'));
+    }
+
+    public function updateBrand(Request $request, Brand $brand): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:180', 'unique:brands,name,' . $brand->id],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $brand->update([
+            'name' => $validated['name'],
+            'slug' => $this->generateUniqueSlug(Brand::class, $validated['name'], $brand->id),
+            'description' => $validated['description'] ?? null,
+            'is_active' => (bool) $validated['is_active'],
+        ]);
+
+        return redirect()
+            ->route('catalogs.index')
+            ->with('success', 'Marca actualizada correctamente.');
     }
 
     public function storeUnitMeasure(Request $request): RedirectResponse
@@ -100,13 +149,43 @@ class CatalogController extends Controller
             ->with('success', 'Unidad de medida registrada correctamente.');
     }
 
-    private function generateUniqueSlug(string $modelClass, string $name): string
+    public function editUnitMeasure(UnitMeasure $unitMeasure): View
+    {
+        return view('catalogs.edit-unit-measure', compact('unitMeasure'));
+    }
+
+    public function updateUnitMeasure(Request $request, UnitMeasure $unitMeasure): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120', 'unique:unit_measures,name,' . $unitMeasure->id],
+            'abbreviation' => ['nullable', 'string', 'max:20'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $unitMeasure->update([
+            'name' => $validated['name'],
+            'slug' => $this->generateUniqueSlug(UnitMeasure::class, $validated['name'], $unitMeasure->id),
+            'abbreviation' => $validated['abbreviation'] ?? null,
+            'is_active' => (bool) $validated['is_active'],
+        ]);
+
+        return redirect()
+            ->route('catalogs.index')
+            ->with('success', 'Unidad de medida actualizada correctamente.');
+    }
+
+    private function generateUniqueSlug(string $modelClass, string $name, ?int $ignoreId = null): string
     {
         $baseSlug = Str::slug($name);
         $slug = $baseSlug;
         $counter = 2;
 
-        while ($modelClass::where('slug', $slug)->exists()) {
+        while (
+            $modelClass::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn($query) => $query->where('id', '!=', $ignoreId))
+            ->exists()
+        ) {
             $slug = "{$baseSlug}-{$counter}";
             $counter++;
         }
