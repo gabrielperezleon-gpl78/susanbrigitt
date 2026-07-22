@@ -45,7 +45,7 @@
         x-data="{
             source: @js(old('source', 'binance')),
             bcvRate: @js((float) old('bcv_rate', $latestRate?->bcv_rate ?? 0)),
-            binanceRate: @js((float) old('binance_rate', $latestRate?->binance_rate ?? $latestRate?->used_rate ?? 0)),
+            binanceRate: @js((float) old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate ?? 0)),
             manualRate: @js((float) old('manual_rate', $latestRate?->manual_rate ?? 0)),
             get usedRate() {
                 if (this.source === 'bcv') return this.bcvRate;
@@ -167,10 +167,22 @@
                             type="number"
                             min="0.01"
                             step="0.0001"
-                            value="{{ old('binance_rate', $latestRate?->binance_rate ?? $latestRate?->used_rate) }}"
+                            value="{{ old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate) }}"
                             x-model.number="binanceRate"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             placeholder="Ejemplo: 37.8000">
+
+                        @if ($binanceQuote)
+                        <p class="mt-2 text-xs leading-5 text-emerald-700">
+                            Binance P2P actualizado: {{ number_format($binanceQuote['rate'], 2, ',', '.') }}
+                            · {{ $binanceQuote['count'] }} ofertas consultadas
+                            · {{ $binanceQuote['fetched_at'] }}
+                        </p>
+                        @elseif ($binanceError)
+                        <p class="mt-2 text-xs leading-5 text-red-600">
+                            {{ $binanceError }}
+                        </p>
+                        @endif
                     </div>
 
                     <div>
