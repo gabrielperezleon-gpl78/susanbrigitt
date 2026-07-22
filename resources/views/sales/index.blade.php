@@ -8,7 +8,7 @@
 <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
     <div>
         <p class="text-sm text-gray-500">
-            Consulta las ventas registradas, formas de pago, tasas aplicadas, ingresos y ganancias estimadas.
+            Consulta las ventas registradas, ingresos, ganancias estimadas y salidas de inventario.
         </p>
     </div>
 
@@ -18,160 +18,130 @@
     </a>
 </div>
 
-<section class="grid grid-cols-1 gap-5 md:grid-cols-4">
+@if (session('success'))
+<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+    {{ session('success') }}
+</div>
+@endif
 
+<section class="grid grid-cols-1 gap-5 md:grid-cols-5">
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Ventas del mes</p>
-        <h2 class="mt-3 text-3xl font-bold">$1.240,00</h2>
-    </div>
-
-    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Ganancia estimada</p>
-        <h2 class="mt-3 text-3xl font-bold text-green-600">$410,00</h2>
+        <p class="text-sm text-gray-500">Ventas</p>
+        <h2 class="mt-3 text-3xl font-bold">{{ $totalSales }}</h2>
     </div>
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">Unidades vendidas</p>
-        <h2 class="mt-3 text-3xl font-bold">86</h2>
+        <h2 class="mt-3 text-3xl font-bold">{{ $totalUnits }}</h2>
     </div>
 
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <p class="text-sm text-gray-500">Ticket promedio</p>
-        <h2 class="mt-3 text-3xl font-bold">$14,42</h2>
+        <p class="text-sm text-gray-500">Total USD</p>
+        <h2 class="mt-3 text-3xl font-bold">${{ number_format($totalUsd, 2, ',', '.') }}</h2>
     </div>
 
+    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+        <p class="text-sm text-gray-500">Total Bs</p>
+        <h2 class="mt-3 text-3xl font-bold">Bs. {{ number_format($totalBs, 2, ',', '.') }}</h2>
+    </div>
+
+    <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+        <p class="text-sm text-gray-500">Ganancia estimada</p>
+        <h2 class="mt-3 text-3xl font-bold text-green-600">${{ number_format($totalProfitUsd, 2, ',', '.') }}</h2>
+    </div>
 </section>
 
 <section class="mt-6 rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-
-    <div class="mb-6 grid gap-4 md:grid-cols-5">
-
-        <input type="text"
-            placeholder="Buscar venta..."
-            class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Producto</option>
-            <option>Base líquida</option>
-            <option>Labial mate</option>
-            <option>Máscara de pestañas</option>
-        </select>
-
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Forma de pago</option>
-            <option>Pago móvil</option>
-            <option>Transferencia Bs</option>
-            <option>Efectivo USD</option>
-            <option>Binance</option>
-            <option>Zelle</option>
-        </select>
-
-        <input type="date"
-            class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-
-        <button class="rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A] transition hover:bg-[#FFF0F4]">
-            Filtrar
-        </button>
-
+    <div class="mb-6">
+        <h2 class="text-lg font-bold">Historial de ventas</h2>
+        <p class="mt-1 text-sm text-gray-500">
+            Registro operativo de ventas y descuentos de inventario.
+        </p>
     </div>
 
-    <div class="max-w-full overflow-x-auto rounded-xl border border-black/5">
-        <table class="min-w-[1180px] w-full text-left text-sm">
+    <div class="overflow-hidden rounded-xl border border-black/5">
+        <table class="min-w-262.5 w-full text-left text-sm">
             <thead class="bg-[#F8F5F2] text-gray-500">
                 <tr>
                     <th class="whitespace-nowrap px-5 py-4">Fecha</th>
+                    <th class="whitespace-nowrap px-5 py-4">Cliente</th>
                     <th class="whitespace-nowrap px-5 py-4">Producto</th>
-                    <th class="whitespace-nowrap px-5 py-4">Marca</th>
-                    <th class="whitespace-nowrap px-5 py-4">Tono</th>
-                    <th class="whitespace-nowrap px-5 py-4">Cantidad</th>
-                    <th class="whitespace-nowrap px-5 py-4">Precio USD</th>
-                    <th class="whitespace-nowrap px-5 py-4">Total USD</th>
-                    <th class="whitespace-nowrap px-5 py-4">Tasa</th>
-                    <th class="whitespace-nowrap px-5 py-4">Total Bs</th>
-                    <th class="whitespace-nowrap px-5 py-4">Ganancia</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Unidades</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Total USD</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Tasa</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Total Bs</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Ganancia</th>
                     <th class="whitespace-nowrap px-5 py-4">Pago</th>
-                    <th class="whitespace-nowrap px-5 py-4">Acciones</th>
                 </tr>
             </thead>
 
             <tbody class="divide-y divide-black/5">
-
+                @forelse ($sales as $sale)
                 <tr>
-                    <td class="whitespace-nowrap px-5 py-4">21/05/2024</td>
-                    <td class="px-5 py-4 font-medium">Base líquida</td>
-                    <td class="px-5 py-4">Vogue</td>
-                    <td class="px-5 py-4">Beige claro</td>
-                    <td class="px-5 py-4 font-semibold">2</td>
-                    <td class="px-5 py-4">$8,00</td>
-                    <td class="px-5 py-4 font-semibold">$16,00</td>
-                    <td class="px-5 py-4">37,65</td>
-                    <td class="px-5 py-4">Bs. 602,40</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$7,00</td>
-                    <td class="px-5 py-4">
-                        <span class="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                            Pago móvil
-                        </span>
+                    <td class="whitespace-nowrap px-5 py-4">
+                        {{ $sale->sale_date ? $sale->sale_date->format('d/m/Y') : $sale->created_at->format('d/m/Y') }}
                     </td>
+
                     <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
+                        {{ $sale->customer_name ?: 'Cliente ocasional' }}
+                    </td>
+
+                    <td class="px-5 py-4">
+                        <div class="space-y-1">
+                            @foreach ($sale->items as $item)
+                            <div>
+                                <span class="font-medium">{{ $item->product?->name ?? 'Producto eliminado' }}</span>
+                                <span class="text-gray-400">× {{ $item->quantity }}</span>
+                            </div>
+                            @endforeach
                         </div>
                     </td>
-                </tr>
 
+                    <td class="whitespace-nowrap px-5 py-4 text-right">
+                        {{ $sale->items->sum('quantity') }}
+                    </td>
+
+                    <td class="whitespace-nowrap px-5 py-4 text-right font-semibold">
+                        ${{ number_format((float) $sale->total_usd, 2, ',', '.') }}
+                    </td>
+
+                    <td class="whitespace-nowrap px-5 py-4 text-right">
+                        {{ number_format((float) $sale->exchange_rate_value, 2, ',', '.') }}
+                    </td>
+
+                    <td class="whitespace-nowrap px-5 py-4 text-right font-semibold">
+                        Bs. {{ number_format((float) $sale->total_bs, 2, ',', '.') }}
+                    </td>
+
+                    <td class="whitespace-nowrap px-5 py-4 text-right font-semibold text-green-600">
+                        ${{ number_format((float) $sale->estimated_profit_usd, 2, ',', '.') }}
+                    </td>
+
+                    <td class="whitespace-nowrap px-5 py-4">
+                        @php
+                        $paymentLabels = [
+                        'pago_movil' => 'Pago móvil',
+                        'transferencia_bs' => 'Transferencia Bs',
+                        'efectivo_usd' => 'Efectivo USD',
+                        'binance' => 'Binance',
+                        'zelle' => 'Zelle',
+                        'mixto' => 'Mixto',
+                        ];
+                        @endphp
+
+                        {{ $paymentLabels[$sale->payment_method] ?? $sale->payment_method }}
+                    </td>
+                </tr>
+                @empty
                 <tr>
-                    <td class="whitespace-nowrap px-5 py-4">21/05/2024</td>
-                    <td class="px-5 py-4 font-medium">Labial mate</td>
-                    <td class="px-5 py-4">Valmy</td>
-                    <td class="px-5 py-4">Rojo intenso</td>
-                    <td class="px-5 py-4 font-semibold">1</td>
-                    <td class="px-5 py-4">$4,50</td>
-                    <td class="px-5 py-4 font-semibold">$4,50</td>
-                    <td class="px-5 py-4">37,65</td>
-                    <td class="px-5 py-4">Bs. 169,43</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$2,50</td>
-                    <td class="px-5 py-4">
-                        <span class="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
-                            Binance
-                        </span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
+                    <td colspan="9" class="px-5 py-10 text-center text-gray-500">
+                        No hay ventas registradas.
                     </td>
                 </tr>
-
-                <tr>
-                    <td class="whitespace-nowrap px-5 py-4">20/05/2024</td>
-                    <td class="px-5 py-4 font-medium">Máscara de pestañas</td>
-                    <td class="px-5 py-4">Maybelline</td>
-                    <td class="px-5 py-4">Negro</td>
-                    <td class="px-5 py-4 font-semibold">1</td>
-                    <td class="px-5 py-4">$7,00</td>
-                    <td class="px-5 py-4 font-semibold">$7,00</td>
-                    <td class="px-5 py-4">36,92</td>
-                    <td class="px-5 py-4">Bs. 258,44</td>
-                    <td class="px-5 py-4 font-semibold text-green-600">$3,20</td>
-                    <td class="px-5 py-4">
-                        <span class="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                            Efectivo USD
-                        </span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Ver</button>
-                            <button class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">Editar</button>
-                        </div>
-                    </td>
-                </tr>
-
+                @endforelse
             </tbody>
         </table>
     </div>
-
 </section>
 
 @endsection

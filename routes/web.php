@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ExchangeRateController;
+use App\Http\Controllers\SaleController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -24,9 +25,11 @@ Route::get('/compras/nueva', [PurchaseController::class, 'create'])->name('purch
 
 Route::post('/compras', [PurchaseController::class, 'store'])->name('purchases.store');
 
-Route::view('/ventas', 'sales.index')->name('sales.index');
+Route::get('/ventas', [SaleController::class, 'index'])->name('sales.index');
 
-Route::view('/ventas/nueva', 'sales.create')->name('sales.create');
+Route::get('/ventas/nueva', [SaleController::class, 'create'])->name('sales.create');
+
+Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
 
 Route::get('/tasas', [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
 

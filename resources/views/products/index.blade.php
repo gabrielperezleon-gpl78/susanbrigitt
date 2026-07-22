@@ -87,7 +87,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-black/5">
-        <table class="min-w-[1050px] w-full text-left text-sm">
+        <table class="min-w-262.5 w-full text-left text-sm">
             <thead class="bg-[#F8F5F2] text-gray-500">
                 <tr>
                     <th class="whitespace-nowrap px-5 py-4">Código</th>
