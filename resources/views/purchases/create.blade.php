@@ -33,56 +33,70 @@
     x-data="{
         quantity: @js((float) old('quantity', 1)),
         unitCostUsdInput: @js(old('unit_cost_usd', '')),
-exchangeRateValueInput: @js(old('exchange_rate_value', $latestExchangeRate?->used_rate ?? '')),
+        exchangeRateValueInput: @js(old('exchange_rate_value', $latestExchangeRate?->used_rate ?? '')),
 
-parseDecimal(value) {
-    if (value === null || value === undefined || value === '') return 0;
+        rateSource: @js(old('rate_source', $latestExchangeRate?->source ?? 'binance')),
+        rateOptions: {
+            bcv: @js((string) ($latestExchangeRate?->bcv_rate ?? '')),
+            binance: @js((string) ($latestExchangeRate?->binance_rate ?? $latestExchangeRate?->used_rate ?? '')),
+            manual: @js((string) ($latestExchangeRate?->manual_rate ?? $latestExchangeRate?->used_rate ?? '')),
+        },
 
-    value = String(value)
-        .trim()
-        .replace(/\s/g, '')
-        .replace('$', '')
-        .replace('Bs.', '')
-        .replace('Bs', '');
+        updateExchangeRateValue() {
+            const value = this.rateOptions[this.rateSource] || '';
+                if (value !== '') {
+                    this.exchangeRateValueInput = String(value);
+                }
+        },
 
-    const lastComma = value.lastIndexOf(',');
-    const lastDot = value.lastIndexOf('.');
+        parseDecimal(value) {
+            if (value === null || value === undefined || value === '') return 0;
 
-    if (lastComma !== -1 && lastDot !== -1) {
-        if (lastComma > lastDot) {
-            value = value.replace(/\./g, '').replace(',', '.');
-        } else {
-            value = value.replace(/,/g, '');
-        }
-    } else if (lastComma !== -1) {
-        value = value.replace(',', '.');
-    }
+            value = String(value)
+                .trim()
+                .replace(/\s/g, '')
+                .replace('$', '')
+                .replace('Bs.', '')
+                .replace('Bs', '');
 
-    return Number(value) || 0;
-},
+            const lastComma = value.lastIndexOf(',');
+            const lastDot = value.lastIndexOf('.');
 
-handleDecimalKey(event) {
-    if (event.code !== 'NumpadDecimal') return;
+            if (lastComma !== -1 && lastDot !== -1) {
+                if (lastComma > lastDot) {
+                    value = value.replace(/\./g, '').replace(',', '.');
+                } else {
+                    value = value.replace(/,/g, '');
+                }
+            } else if (lastComma !== -1) {
+                value = value.replace(',', '.');
+            }
 
-    event.preventDefault();
+            return Number(value) || 0;
+        },
 
-    const input = event.target;
-    const separator = '.';
-    const start = input.selectionStart ?? input.value.length;
-    const end = input.selectionEnd ?? input.value.length;
+        handleDecimalKey(event) {
+            if (event.code !== 'NumpadDecimal') return;
 
-    input.value = input.value.slice(0, start) + separator + input.value.slice(end);
-    input.setSelectionRange(start + 1, start + 1);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-},
+            event.preventDefault();
 
-get unitCostUsd() {
-    return this.parseDecimal(this.unitCostUsdInput);
-},
+            const input = event.target;
+            const separator = '.';
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
 
-get exchangeRateValue() {
-    return this.parseDecimal(this.exchangeRateValueInput);
-},
+            input.value = input.value.slice(0, start) + separator + input.value.slice(end);
+            input.setSelectionRange(start + 1, start + 1);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        },
+
+        get unitCostUsd() {
+            return this.parseDecimal(this.unitCostUsdInput);
+        },
+
+        get exchangeRateValue() {
+            return this.parseDecimal(this.exchangeRateValueInput);
+        },
 
         get totalUsd() {
             return this.quantity * this.unitCostUsd;
@@ -232,11 +246,13 @@ get exchangeRateValue() {
                 <select
                     id="rate_source"
                     name="rate_source"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                    x-model="rateSource"
+                    x-on:change="updateExchangeRateValue()"
+                    class="mt-2 w-full border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-900"
                     required>
-                    <option value="binance" @selected($selectedRateSource==='binance' )>Binance</option>
-                    <option value="bcv" @selected($selectedRateSource==='bcv' )>BCV</option>
-                    <option value="manual" @selected($selectedRateSource==='manual' )>Manual</option>
+                    <option value="bcv">BCV</option>
+                    <option value="binance">Binance</option>
+                    <option value="manual">Manual</option>
                 </select>
             </div>
 
