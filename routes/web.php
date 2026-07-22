@@ -183,4 +183,40 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/reportes', 'reports.index')
         ->name('reports.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Categorias
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/catalogos/categorias',
+        [CatalogController::class, 'storeCategory']
+    )->name('catalogs.categories.store');
+
+    Route::get(
+        '/catalogos/categorias/{category}/editar',
+        [CatalogController::class, 'editCategory']
+    )->name('catalogs.categories.edit');
+
+    Route::put(
+        '/catalogos/categorias/{category}',
+        [CatalogController::class, 'updateCategory']
+    )->name('catalogs.categories.update');
+
+    Route::post(
+        '/catalogos/tonos',
+        [CatalogController::class, 'storeTone']
+    )->name('catalogs.tones.store');
+
+    Route::get(
+        '/catalogos/tonos/{tone}/editar',
+        [CatalogController::class, 'editTone']
+    )->name('catalogs.tones.edit');
+
+    Route::put(
+        '/catalogos/tonos/{tone}',
+        [CatalogController::class, 'updateTone']
+    )->name('catalogs.tones.update');
 });
