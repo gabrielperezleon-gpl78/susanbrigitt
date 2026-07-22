@@ -104,14 +104,39 @@
             <div class="border-t border-white/10 p-5">
                 <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F3C8D1] text-sm font-bold text-[#7C3A48]">
-                        S
+                        {{ substr(auth()->user()->name, 0, 1) }}
                     </div>
 
-                    <div x-show="sidebarOpen">
-                        <div class="text-sm font-semibold">Susan</div>
-                        <div class="text-xs text-gray-400">Administradora</div>
+                    <div
+                        x-show="sidebarOpen"
+                        class="min-w-0 flex-1">
+                        <div class="truncate text-sm font-semibold">
+                            {{ auth()->user()->name }}
+                        </div>
+
+                        <div class="truncate text-xs text-gray-400">
+                            {{ auth()->user()->email }}
+                        </div>
                     </div>
                 </div>
+
+                <form
+                    action="{{ route('logout') }}"
+                    method="POST"
+                    class="mt-4">
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:bg-white/10 hover:text-white"
+                        :title="sidebarOpen ? '' : 'Cerrar sesión'">
+                        <span>↪</span>
+
+                        <span x-show="sidebarOpen">
+                            Cerrar sesión
+                        </span>
+                    </button>
+                </form>
             </div>
 
         </aside>

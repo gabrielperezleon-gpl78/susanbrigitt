@@ -1,73 +1,186 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\ExchangeRateController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExchangeRateController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SaleController;
+use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+/*
+|--------------------------------------------------------------------------
+| Acceso público
+|--------------------------------------------------------------------------
+|
+| La portada muestra exclusivamente el formulario de inicio de sesión.
+| No se exponen métricas ni contenidos administrativos.
+|
+*/
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware('guest')->group(function () {
+    Route::get('/', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
 
-Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
+    Route::post('/iniciar-sesion', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('login.store');
+});
 
-Route::get('/productos/nuevo', [ProductController::class, 'create'])->name('products.create');
+/*
+|--------------------------------------------------------------------------
+| Cerrar sesión
+|--------------------------------------------------------------------------
+*/
 
-Route::post('/productos', [ProductController::class, 'store'])->name('products.store');
+Route::post('/cerrar-sesion', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
-Route::get('/productos/{product}', [ProductController::class, 'show'])->name('products.show');
+/*
+|--------------------------------------------------------------------------
+| Área administrativa privada
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])->name('products.edit');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-Route::put('/productos/{product}', [ProductController::class, 'update'])->name('products.update');
+    /*
+    |--------------------------------------------------------------------------
+    | Productos
+    |--------------------------------------------------------------------------
+    */
 
-Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/productos', [ProductController::class, 'index'])
+        ->name('products.index');
 
-Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/productos/nuevo', [ProductController::class, 'create'])
+        ->name('products.create');
 
-Route::get('/compras/nueva', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/productos', [ProductController::class, 'store'])
+        ->name('products.store');
 
-Route::post('/compras', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/productos/{product}', [ProductController::class, 'show'])
+        ->name('products.show');
 
-Route::get('/compras/{purchase}/editar', [PurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])
+        ->name('products.edit');
 
-Route::put('/compras/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+    Route::put('/productos/{product}', [ProductController::class, 'update'])
+        ->name('products.update');
 
-Route::get('/ventas', [SaleController::class, 'index'])->name('sales.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Inventario
+    |--------------------------------------------------------------------------
+    */
 
-Route::get('/ventas/nueva', [SaleController::class, 'create'])->name('sales.create');
+    Route::get('/inventario', [InventoryController::class, 'index'])
+        ->name('inventory.index');
 
-Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
+    /*
+    |--------------------------------------------------------------------------
+    | Compras
+    |--------------------------------------------------------------------------
+    */
 
-Route::get('/ventas/{sale}/editar', [SaleController::class, 'edit'])->name('sales.edit');
+    Route::get('/compras', [PurchaseController::class, 'index'])
+        ->name('purchases.index');
 
-Route::put('/ventas/{sale}', [SaleController::class, 'update'])->name('sales.update');
+    Route::get('/compras/nueva', [PurchaseController::class, 'create'])
+        ->name('purchases.create');
 
-Route::get('/tasas', [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
+    Route::post('/compras', [PurchaseController::class, 'store'])
+        ->name('purchases.store');
 
-Route::get('/tasas/nueva', [ExchangeRateController::class, 'create'])->name('exchange-rates.create');
+    Route::get('/compras/{purchase}/editar', [PurchaseController::class, 'edit'])
+        ->name('purchases.edit');
 
-Route::post('/tasas', [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
+    Route::put('/compras/{purchase}', [PurchaseController::class, 'update'])
+        ->name('purchases.update');
 
-Route::get('/catalogos', [CatalogController::class, 'index'])->name('catalogs.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Ventas
+    |--------------------------------------------------------------------------
+    */
 
-Route::post('/catalogos/proveedores', [CatalogController::class, 'storeSupplier'])->name('catalogs.suppliers.store');
+    Route::get('/ventas', [SaleController::class, 'index'])
+        ->name('sales.index');
 
-Route::post('/catalogos/marcas', [CatalogController::class, 'storeBrand'])->name('catalogs.brands.store');
+    Route::get('/ventas/nueva', [SaleController::class, 'create'])
+        ->name('sales.create');
 
-Route::post('/catalogos/unidades', [CatalogController::class, 'storeUnitMeasure'])->name('catalogs.unit-measures.store');
+    Route::post('/ventas', [SaleController::class, 'store'])
+        ->name('sales.store');
 
-Route::get('/catalogos/proveedores/{supplier}/editar', [CatalogController::class, 'editSupplier'])->name('catalogs.suppliers.edit');
-Route::put('/catalogos/proveedores/{supplier}', [CatalogController::class, 'updateSupplier'])->name('catalogs.suppliers.update');
+    Route::get('/ventas/{sale}/editar', [SaleController::class, 'edit'])
+        ->name('sales.edit');
 
-Route::get('/catalogos/marcas/{brand}/editar', [CatalogController::class, 'editBrand'])->name('catalogs.brands.edit');
-Route::put('/catalogos/marcas/{brand}', [CatalogController::class, 'updateBrand'])->name('catalogs.brands.update');
+    Route::put('/ventas/{sale}', [SaleController::class, 'update'])
+        ->name('sales.update');
 
-Route::get('/catalogos/unidades/{unitMeasure}/editar', [CatalogController::class, 'editUnitMeasure'])->name('catalogs.unit-measures.edit');
-Route::put('/catalogos/unidades/{unitMeasure}', [CatalogController::class, 'updateUnitMeasure'])->name('catalogs.unit-measures.update');
+    /*
+    |--------------------------------------------------------------------------
+    | Tasas de cambio
+    |--------------------------------------------------------------------------
+    */
 
-Route::view('/reportes', 'reports.index')->name('reports.index');
+    Route::get('/tasas', [ExchangeRateController::class, 'index'])
+        ->name('exchange-rates.index');
+
+    Route::get('/tasas/nueva', [ExchangeRateController::class, 'create'])
+        ->name('exchange-rates.create');
+
+    Route::post('/tasas', [ExchangeRateController::class, 'store'])
+        ->name('exchange-rates.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Catálogos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/catalogos', [CatalogController::class, 'index'])
+        ->name('catalogs.index');
+
+    Route::post('/catalogos/proveedores', [CatalogController::class, 'storeSupplier'])
+        ->name('catalogs.suppliers.store');
+
+    Route::get('/catalogos/proveedores/{supplier}/editar', [CatalogController::class, 'editSupplier'])
+        ->name('catalogs.suppliers.edit');
+
+    Route::put('/catalogos/proveedores/{supplier}', [CatalogController::class, 'updateSupplier'])
+        ->name('catalogs.suppliers.update');
+
+    Route::post('/catalogos/marcas', [CatalogController::class, 'storeBrand'])
+        ->name('catalogs.brands.store');
+
+    Route::get('/catalogos/marcas/{brand}/editar', [CatalogController::class, 'editBrand'])
+        ->name('catalogs.brands.edit');
+
+    Route::put('/catalogos/marcas/{brand}', [CatalogController::class, 'updateBrand'])
+        ->name('catalogs.brands.update');
+
+    Route::post('/catalogos/unidades', [CatalogController::class, 'storeUnitMeasure'])
+        ->name('catalogs.unit-measures.store');
+
+    Route::get('/catalogos/unidades/{unitMeasure}/editar', [CatalogController::class, 'editUnitMeasure'])
+        ->name('catalogs.unit-measures.edit');
+
+    Route::put('/catalogos/unidades/{unitMeasure}', [CatalogController::class, 'updateUnitMeasure'])
+        ->name('catalogs.unit-measures.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reportes
+    |--------------------------------------------------------------------------
+    */
+
+    Route::view('/reportes', 'reports.index')
+        ->name('reports.index');
+});
