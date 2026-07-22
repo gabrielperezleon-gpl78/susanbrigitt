@@ -12,7 +12,9 @@ Route::view('/dashboard', 'dashboard.index')->name('dashboard');
 
 Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
 
-Route::view('/productos/nuevo', 'products.create')->name('products.create');
+Route::get('/productos/nuevo', [ProductController::class, 'create'])->name('products.create');
+
+Route::post('/productos', [ProductController::class, 'store'])->name('products.store');
 
 Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
 

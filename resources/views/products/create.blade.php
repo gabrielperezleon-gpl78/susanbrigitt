@@ -5,286 +5,394 @@
 
 @section('content')
 
-<div class="mb-6 flex items-center justify-between">
-    <div>
-        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-[#E46F8A]">
-            ← Volver al dashboard
-        </a>
-        <p class="mt-2 text-sm text-gray-500">
-            Registra productos con costo, precio de venta, inventario inicial y datos comerciales.
-        </p>
-    </div>
-
-</div>
-
-<form class="space-y-6">
-
-    <section class="rounded-2xl border border-black/5 bg-white shadow-sm">
-
-        <div class="border-b border-black/5 px-6 py-5">
-            <h2 class="text-lg font-bold">Información del producto</h2>
-            <p class="mt-1 text-sm text-gray-500">
-                Datos principales para identificar y administrar el producto.
-            </p>
-        </div>
-
-        <div class="grid gap-8 p-6 xl:grid-cols-[1fr_320px]">
-
-            <div class="grid gap-5 md:grid-cols-2">
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Código interno <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <input type="text" value="SB-0041"
-                        class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <p class="mt-2 text-xs text-gray-400">Código único para identificar el producto.</p>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Proveedor
-                    </label>
-                    <input type="text" value="Proveedoría Beauty C.A."
-                        class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <p class="mt-2 text-xs text-gray-400">Proveedor o distribuidor principal.</p>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Nombre del producto <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <input type="text" value="Base Líquida"
-                        class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    <p class="mt-2 text-xs text-gray-400">Nombre comercial del producto.</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Costo compra USD <span class="text-[#E46F8A]">*</span>
-                        </label>
-                        <input type="text" value="$4,50"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Precio venta USD <span class="text-[#E46F8A]">*</span>
-                        </label>
-                        <input type="text" value="$8,00"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Categoría <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                        <option>Maquillaje</option>
-                        <option>Cuidado facial</option>
-                        <option>Cuidado labial</option>
-                        <option>Accesorios</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Ganancia USD
-                        </label>
-                        <input type="text" value="$3,50" readonly
-                            class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold text-[#E46F8A] outline-none">
-                        <p class="mt-2 text-xs text-gray-400">Se calcula automáticamente.</p>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Margen %
-                        </label>
-                        <input type="text" value="43,75%" readonly
-                            class="w-full rounded-xl border border-black/10 bg-[#F8F5F2] px-4 py-3 text-sm font-semibold text-[#171717] outline-none">
-                        <p class="mt-2 text-xs text-gray-400">Se calcula automáticamente.</p>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Marca <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                        <option>Vogue</option>
-                        <option>Valmy</option>
-                        <option>Maybelline</option>
-                        <option>L'Oréal</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Stock inicial <span class="text-[#E46F8A]">*</span>
-                        </label>
-                        <input type="number" value="20"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Stock mínimo <span class="text-[#E46F8A]">*</span>
-                        </label>
-                        <input type="number" value="5"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Tono <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                        <option>Beige claro</option>
-                        <option>Beige natural</option>
-                        <option>Rojo intenso</option>
-                        <option>Negro</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Fecha de ingreso <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <input type="date" value="2024-05-21"
-                        class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Descripción breve
-                    </label>
-                    <textarea rows="5"
-                        class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">Base líquida de cobertura media, acabado natural.</textarea>
-                    <p class="mt-2 text-xs text-gray-400">Máximo 200 caracteres.</p>
-                </div>
-
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-gray-700">
-                        Estado <span class="text-[#E46F8A]">*</span>
-                    </label>
-                    <select class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-                        <option>Activo</option>
-                        <option>Inactivo</option>
-                        <option>Agotado</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <aside>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">
-                    Imagen del producto
-                </label>
-
-                <div class="flex h-72 items-center justify-center rounded-2xl border border-dashed border-black/20 bg-[#F8F5F2]">
-                    <div class="text-center">
-                        <div class="mx-auto flex h-36 w-24 items-center justify-center rounded-2xl bg-white text-5xl shadow-sm">
-                            🧴
-                        </div>
-                        <p class="mt-4 text-sm font-semibold text-gray-700">Producto</p>
-                        <p class="mt-1 text-xs text-gray-400">Vista previa</p>
-                    </div>
-                </div>
-
-                <button type="button"
-                    class="mt-4 w-full rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A] transition hover:bg-[#E46F8A] hover:text-white">
-                    Cambiar imagen
-                </button>
-
-                <p class="mt-3 text-center text-xs text-gray-400">
-                    Formatos: JPG, PNG o WEBP. Máx. 2MB.
-                </p>
-            </aside>
-
-        </div>
-
-    </section>
-
-    <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-bold">Resumen financiero</h2>
-
-        <div class="mt-6 grid gap-4 md:grid-cols-4">
-            <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
-                <p class="text-sm text-gray-500">Costo compra</p>
-                <h3 class="mt-2 text-2xl font-bold">$4,50</h3>
-            </div>
-
-            <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
-                <p class="text-sm text-gray-500">Precio venta</p>
-                <h3 class="mt-2 text-2xl font-bold">$8,00</h3>
-            </div>
-
-            <div class="rounded-2xl bg-[#FFF0F4] p-5 text-center">
-                <p class="text-sm text-gray-500">Ganancia</p>
-                <h3 class="mt-2 text-2xl font-bold text-[#E46F8A]">$3,50</h3>
-            </div>
-
-            <div class="rounded-2xl bg-[#F8F5F2] p-5 text-center">
-                <p class="text-sm text-gray-500">Margen</p>
-                <h3 class="mt-2 text-2xl font-bold">43,75%</h3>
-            </div>
-        </div>
-    </section>
-
-    <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-bold">Información adicional</h2>
-
-        <div class="mt-6 grid gap-5 md:grid-cols-3">
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">Proveedor alternativo</label>
-                <input type="text" placeholder="Opcional"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">Código de barras</label>
-                <input type="text" placeholder="EAN, UPC o código interno"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-gray-700">Etiquetas</label>
-                <input type="text" placeholder="nuevo, favorito, promoción"
-                    class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            </div>
-        </div>
-
-        <div class="mt-5">
-            <label class="mb-2 block text-sm font-semibold text-gray-700">Notas internas</label>
-            <textarea rows="4" placeholder="Escribe aquí cualquier detalle adicional sobre el producto..."
-                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"></textarea>
-        </div>
-    </section>
-
-    <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
-        <div class="grid gap-4 md:grid-cols-3">
-            <a href="{{ route('dashboard') }}"
-                class="rounded-xl border border-black/10 px-5 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                Cancelar
+<div class="space-y-8">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+            <a href="{{ route('products.index') }}" class="text-sm font-semibold text-[#E46F8A]">
+                ← Volver a productos
             </a>
 
-            <button type="button"
-                class="rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A] transition hover:bg-[#FFF0F4]">
-                Guardar producto
-            </button>
+            <p class="mt-4 text-sm font-medium uppercase tracking-[0.24em] text-rose-400">
+                Catálogo de productos
+            </p>
 
-            <button type="button"
-                class="rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
-                Guardar y registrar compra
-            </button>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">
+                Registrar nuevo producto
+            </h1>
+
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                Carga un producto con sus datos comerciales, proveedor, precios y stock inicial.
+            </p>
         </div>
     </div>
 
-</form>
+    @if ($errors->any())
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+        <p class="font-bold">Revisa los datos del formulario.</p>
+
+        <ul class="mt-2 list-inside list-disc space-y-1">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <form
+        action="{{ route('products.store') }}"
+        method="POST"
+        class="grid gap-6 xl:grid-cols-[1fr_360px]"
+        x-data="{
+            purchasePrice: @js((float) old('purchase_price_usd', 0)),
+            salePrice: @js((float) old('sale_price_usd', 0)),
+            initialStock: @js((int) old('initial_stock', 0)),
+            get unitProfit() {
+                return this.salePrice - this.purchasePrice;
+            },
+            get profitMargin() {
+                if (!this.salePrice || this.salePrice <= 0) return 0;
+                return (this.unitProfit / this.salePrice) * 100;
+            },
+            get inventoryValue() {
+                return this.purchasePrice * this.initialStock;
+            },
+            formatNumber(value) {
+                return new Intl.NumberFormat('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(value || 0);
+            }
+        }">
+        @csrf
+
+        <div class="space-y-6">
+            <section class="rounded-2xl border border-black/5 bg-white shadow-sm">
+                <div class="border-b border-black/5 px-6 py-5">
+                    <h2 class="text-lg font-bold text-zinc-900">
+                        Información principal
+                    </h2>
+
+                    <p class="mt-1 text-sm text-zinc-500">
+                        Datos básicos para identificar el producto dentro del catálogo.
+                    </p>
+                </div>
+
+                <div class="grid gap-5 p-6 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                        <label for="name" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Nombre del producto <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            value="{{ old('name') }}"
+                            placeholder="Ejemplo: Labial mate rojo intenso"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                    </div>
+
+                    <div>
+                        <label for="internal_code" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Código interno
+                        </label>
+
+                        <input
+                            id="internal_code"
+                            name="internal_code"
+                            type="text"
+                            value="{{ old('internal_code') }}"
+                            placeholder="Ejemplo: SB-LAB-001"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                    </div>
+
+                    <div>
+                        <label for="barcode" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Código de barras
+                        </label>
+
+                        <input
+                            id="barcode"
+                            name="barcode"
+                            type="text"
+                            value="{{ old('barcode') }}"
+                            placeholder="Opcional"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                    </div>
+
+                    <div>
+                        <label for="category_id" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Categoría
+                        </label>
+
+                        <select
+                            id="category_id"
+                            name="category_id"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            <option value="">Sin categoría</option>
+                            @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" @selected(old('category_id')==$category->id)>
+                                {{ $category->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="brand_id" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Marca
+                        </label>
+
+                        <select
+                            id="brand_id"
+                            name="brand_id"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            <option value="">Sin marca</option>
+                            @foreach ($brands as $brand)
+                            <option value="{{ $brand->id }}" @selected(old('brand_id')==$brand->id)>
+                                {{ $brand->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="tone_id" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tono / color
+                        </label>
+
+                        <select
+                            id="tone_id"
+                            name="tone_id"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            <option value="">Sin tono</option>
+                            @foreach ($tones as $tone)
+                            <option value="{{ $tone->id }}" @selected(old('tone_id')==$tone->id)>
+                                {{ $tone->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="supplier_id" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Proveedor
+                        </label>
+
+                        <select
+                            id="supplier_id"
+                            name="supplier_id"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            <option value="">Sin proveedor</option>
+                            @foreach ($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" @selected(old('supplier_id')==$supplier->id)>
+                                {{ $supplier->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="description" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Descripción
+                        </label>
+
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Descripción comercial del producto..."
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">{{ old('description') }}</textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-black/5 bg-white shadow-sm">
+                <div class="border-b border-black/5 px-6 py-5">
+                    <h2 class="text-lg font-bold text-zinc-900">
+                        Precios e inventario
+                    </h2>
+
+                    <p class="mt-1 text-sm text-zinc-500">
+                        Define precios en dólares, stock inicial y stock mínimo de alerta.
+                    </p>
+                </div>
+
+                <div class="grid gap-5 p-6 md:grid-cols-2">
+                    <div>
+                        <label for="purchase_price_usd" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Costo de compra USD <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <input
+                            id="purchase_price_usd"
+                            name="purchase_price_usd"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value="{{ old('purchase_price_usd') }}"
+                            x-model.number="purchasePrice"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                    </div>
+
+                    <div>
+                        <label for="sale_price_usd" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Precio de venta USD <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <input
+                            id="sale_price_usd"
+                            name="sale_price_usd"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value="{{ old('sale_price_usd') }}"
+                            x-model.number="salePrice"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                    </div>
+
+                    <div>
+                        <label for="initial_stock" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Stock inicial <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <input
+                            id="initial_stock"
+                            name="initial_stock"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value="{{ old('initial_stock', 0) }}"
+                            x-model.number="initialStock"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                    </div>
+
+                    <div>
+                        <label for="minimum_stock" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Stock mínimo <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <input
+                            id="minimum_stock"
+                            name="minimum_stock"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value="{{ old('minimum_stock', 1) }}"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                    </div>
+
+                    <div>
+                        <label for="entry_date" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Fecha de ingreso
+                        </label>
+
+                        <input
+                            id="entry_date"
+                            name="entry_date"
+                            type="date"
+                            value="{{ old('entry_date', now()->toDateString()) }}"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                    </div>
+
+                    <div>
+                        <label for="status" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Estado <span class="text-[#E46F8A]">*</span>
+                        </label>
+
+                        <select
+                            id="status"
+                            name="status"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
+                            <option value="active" @selected(old('status', 'active' )==='active' )>Activo</option>
+                            <option value="inactive" @selected(old('status')==='inactive' )>Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+                <h2 class="text-lg font-bold text-zinc-900">
+                    Notas internas
+                </h2>
+
+                <textarea
+                    id="internal_notes"
+                    name="internal_notes"
+                    rows="4"
+                    placeholder="Notas privadas sobre proveedor, rotación, reposición o condiciones comerciales..."
+                    class="mt-5 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">{{ old('internal_notes') }}</textarea>
+            </section>
+        </div>
+
+        <aside class="space-y-6">
+            <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+                <p class="text-xs font-medium uppercase tracking-[0.18em] text-rose-400">
+                    Resumen
+                </p>
+
+                <div class="mt-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <span class="text-sm text-zinc-500">Ganancia unitaria</span>
+                        <span class="text-sm font-semibold text-zinc-900">
+                            $<span x-text="formatNumber(unitProfit)"></span>
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <span class="text-sm text-zinc-500">Margen</span>
+                        <span class="text-sm font-semibold text-zinc-900">
+                            <span x-text="formatNumber(profitMargin)"></span>%
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <span class="text-sm text-zinc-500">Stock inicial</span>
+                        <span class="text-sm font-semibold text-zinc-900" x-text="initialStock || 0"></span>
+                    </div>
+
+                    <div>
+                        <span class="text-sm text-zinc-500">Valor inicial del inventario</span>
+                        <p class="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">
+                            $<span x-text="formatNumber(inventoryValue)"></span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-rose-100 bg-rose-50 p-5">
+                <p class="text-sm font-semibold text-zinc-900">
+                    Registro inicial
+                </p>
+
+                <p class="mt-2 text-sm leading-6 text-zinc-600">
+                    El stock actual se guardará igual al stock inicial. Luego las compras aumentarán existencias y las ventas las descontarán.
+                </p>
+            </section>
+
+            <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
+                <div class="space-y-3">
+                    <button
+                        type="submit"
+                        class="w-full rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
+                        Guardar producto
+                    </button>
+
+                    <a
+                        href="{{ route('products.index') }}"
+                        class="block w-full rounded-xl border border-black/10 px-5 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </form>
+</div>
 
 @endsection
