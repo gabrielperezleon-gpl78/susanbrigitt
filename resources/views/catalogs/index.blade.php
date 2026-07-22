@@ -45,26 +45,45 @@
             <form action="{{ route('catalogs.suppliers.store') }}" method="POST" class="mt-5 space-y-4">
                 @csrf
 
-                <input name="name" type="text" placeholder="Nombre del proveedor"
+                <input
+                    name="name"
+                    type="text"
+                    placeholder="Nombre del proveedor"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                     required>
 
-                <input name="contact_name" type="text" placeholder="Persona de contacto"
+                <input
+                    name="contact_name"
+                    type="text"
+                    placeholder="Persona de contacto"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
 
-                <input name="phone" type="text" placeholder="Teléfono"
+                <input
+                    name="phone"
+                    type="text"
+                    placeholder="Teléfono"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
 
-                <input name="email" type="email" placeholder="Correo"
+                <input
+                    name="email"
+                    type="email"
+                    placeholder="Correo"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
 
-                <textarea name="address" rows="2" placeholder="Dirección"
+                <textarea
+                    name="address"
+                    rows="2"
+                    placeholder="Dirección"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"></textarea>
 
-                <textarea name="notes" rows="2" placeholder="Notas"
+                <textarea
+                    name="notes"
+                    rows="2"
+                    placeholder="Notas"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"></textarea>
 
-                <button type="submit"
+                <button
+                    type="submit"
                     class="w-full rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
                     Guardar proveedor
                 </button>
@@ -77,14 +96,21 @@
             <form action="{{ route('catalogs.brands.store') }}" method="POST" class="mt-5 space-y-4">
                 @csrf
 
-                <input name="name" type="text" placeholder="Nombre de la marca"
+                <input
+                    name="name"
+                    type="text"
+                    placeholder="Nombre de la marca"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                     required>
 
-                <textarea name="description" rows="3" placeholder="Descripción opcional"
+                <textarea
+                    name="description"
+                    rows="3"
+                    placeholder="Descripción opcional"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"></textarea>
 
-                <button type="submit"
+                <button
+                    type="submit"
                     class="w-full rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
                     Guardar marca
                 </button>
@@ -97,14 +123,21 @@
             <form action="{{ route('catalogs.unit-measures.store') }}" method="POST" class="mt-5 space-y-4">
                 @csrf
 
-                <input name="name" type="text" placeholder="Nombre: Unidad, Caja, Set, Paquete"
+                <input
+                    name="name"
+                    type="text"
+                    placeholder="Nombre: Unidad, Caja, Set, Paquete"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                     required>
 
-                <input name="abbreviation" type="text" placeholder="Abreviatura: und, caja, set"
+                <input
+                    name="abbreviation"
+                    type="text"
+                    placeholder="Abreviatura: und, caja, set"
                     class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
 
-                <button type="submit"
+                <button
+                    type="submit"
                     class="w-full rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
                     Guardar unidad
                 </button>
@@ -119,13 +152,26 @@
             <div class="mt-5 space-y-3">
                 @forelse ($suppliers as $supplier)
                 <div class="rounded-xl border border-black/5 bg-[#F8F5F2] p-4">
-                    <p class="text-sm font-semibold text-zinc-900">{{ $supplier->name }}</p>
-                    <p class="mt-1 text-xs text-gray-500">
-                        {{ $supplier->contact_name ?: 'Sin contacto' }}
-                        @if ($supplier->phone)
-                        · {{ $supplier->phone }}
-                        @endif
-                    </p>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-semibold text-zinc-900">
+                                {{ $supplier->name }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ $supplier->contact_name ?: 'Sin contacto' }}
+                                @if ($supplier->phone)
+                                · {{ $supplier->phone }}
+                                @endif
+                            </p>
+                        </div>
+
+                        <a
+                            href="{{ route('catalogs.suppliers.edit', $supplier) }}"
+                            class="shrink-0 rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-gray-50">
+                            Editar
+                        </a>
+                    </div>
                 </div>
                 @empty
                 <p class="text-sm text-gray-500">No hay proveedores registrados.</p>
@@ -139,8 +185,23 @@
             <div class="mt-5 space-y-3">
                 @forelse ($brands as $brand)
                 <div class="rounded-xl border border-black/5 bg-[#F8F5F2] p-4">
-                    <p class="text-sm font-semibold text-zinc-900">{{ $brand->name }}</p>
-                    <p class="mt-1 text-xs text-gray-500">{{ $brand->description ?: 'Sin descripción' }}</p>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-semibold text-zinc-900">
+                                {{ $brand->name }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ $brand->description ?: 'Sin descripción' }}
+                            </p>
+                        </div>
+
+                        <a
+                            href="{{ route('catalogs.brands.edit', $brand) }}"
+                            class="shrink-0 rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-gray-50">
+                            Editar
+                        </a>
+                    </div>
                 </div>
                 @empty
                 <p class="text-sm text-gray-500">No hay marcas registradas.</p>
@@ -154,10 +215,23 @@
             <div class="mt-5 space-y-3">
                 @forelse ($unitMeasures as $unitMeasure)
                 <div class="rounded-xl border border-black/5 bg-[#F8F5F2] p-4">
-                    <p class="text-sm font-semibold text-zinc-900">{{ $unitMeasure->name }}</p>
-                    <p class="mt-1 text-xs text-gray-500">
-                        {{ $unitMeasure->abbreviation ?: 'Sin abreviatura' }}
-                    </p>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-semibold text-zinc-900">
+                                {{ $unitMeasure->name }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ $unitMeasure->abbreviation ?: 'Sin abreviatura' }}
+                            </p>
+                        </div>
+
+                        <a
+                            href="{{ route('catalogs.unit-measures.edit', $unitMeasure) }}"
+                            class="shrink-0 rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-gray-50">
+                            Editar
+                        </a>
+                    </div>
                 </div>
                 @empty
                 <p class="text-sm text-gray-500">No hay unidades de medida registradas.</p>
