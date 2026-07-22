@@ -222,6 +222,27 @@ get inventoryValue() {
                     </div>
 
                     <div>
+                        <label for="unit_measure_id" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Unidad de medida
+                        </label>
+
+                        <select
+                            id="unit_measure_id"
+                            name="unit_measure_id"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            <option value="">Sin unidad</option>
+                            @foreach ($unitMeasures as $unitMeasure)
+                            <option value="{{ $unitMeasure->id }}" @selected(old('unit_measure_id')==$unitMeasure->id)>
+                                {{ $unitMeasure->name }}
+                                @if ($unitMeasure->abbreviation)
+                                · {{ $unitMeasure->abbreviation }}
+                                @endif
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
                         <label for="supplier_id" class="mb-2 block text-sm font-semibold text-gray-700">
                             Proveedor
                         </label>

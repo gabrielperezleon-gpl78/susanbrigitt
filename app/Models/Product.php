@@ -11,6 +11,7 @@ class Product extends Model
         'category_id',
         'brand_id',
         'tone_id',
+        'unit_measure_id',
         'supplier_id',
         'internal_code',
         'name',
@@ -54,6 +55,11 @@ class Product extends Model
     public function tone(): BelongsTo
     {
         return $this->belongsTo(Tone::class);
+    }
+
+    public function unitMeasure(): BelongsTo
+    {
+        return $this->belongsTo(UnitMeasure::class);
     }
 
     public function supplier(): BelongsTo

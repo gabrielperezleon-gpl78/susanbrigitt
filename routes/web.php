@@ -7,6 +7,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CatalogController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -37,5 +38,13 @@ Route::get('/tasas', [ExchangeRateController::class, 'index'])->name('exchange-r
 Route::get('/tasas/nueva', [ExchangeRateController::class, 'create'])->name('exchange-rates.create');
 
 Route::post('/tasas', [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
+
+Route::get('/catalogos', [CatalogController::class, 'index'])->name('catalogs.index');
+
+Route::post('/catalogos/proveedores', [CatalogController::class, 'storeSupplier'])->name('catalogs.suppliers.store');
+
+Route::post('/catalogos/marcas', [CatalogController::class, 'storeBrand'])->name('catalogs.brands.store');
+
+Route::post('/catalogos/unidades', [CatalogController::class, 'storeUnitMeasure'])->name('catalogs.unit-measures.store');
 
 Route::view('/reportes', 'reports.index')->name('reports.index');

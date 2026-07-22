@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\UnitMeasure;
 use App\Models\Supplier;
 use App\Models\Tone;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +57,11 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
+        $unitMeasures = UnitMeasure::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $suppliers = Supplier::query()
             ->where('is_active', true)
             ->orderBy('name')
@@ -65,6 +71,7 @@ class ProductController extends Controller
             'categories',
             'brands',
             'tones',
+            'unitMeasures',
             'suppliers'
         ));
     }
@@ -80,6 +87,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
+            'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code'],
             'name' => ['required', 'string', 'max:180'],
@@ -108,6 +116,7 @@ class ProductController extends Controller
             'category_id' => $validated['category_id'] ?? null,
             'brand_id' => $validated['brand_id'] ?? null,
             'tone_id' => $validated['tone_id'] ?? null,
+            'unit_measure_id' => $validated['unit_measure_id'] ?? null,
             'supplier_id' => $validated['supplier_id'] ?? null,
             'internal_code' => $validated['internal_code'] ?? null,
             'name' => $validated['name'],
@@ -145,6 +154,7 @@ class ProductController extends Controller
 
         return $slug;
     }
+
     private function normalizeDecimal(?string $value): ?string
     {
         if ($value === null) {
