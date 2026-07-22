@@ -71,6 +71,11 @@ class ProductController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'purchase_price_usd' => $this->normalizeDecimal($request->input('purchase_price_usd')),
+            'sale_price_usd' => $this->normalizeDecimal($request->input('sale_price_usd')),
+        ]);
+
         $validated = $request->validate([
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
@@ -139,5 +144,35 @@ class ProductController extends Controller
         }
 
         return $slug;
+    }
+    private function normalizeDecimal(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        $value = str_replace(['$', 'Bs.', 'Bs', ' '], '', $value);
+
+        $lastComma = strrpos($value, ',');
+        $lastDot = strrpos($value, '.');
+
+        if ($lastComma !== false && $lastDot !== false) {
+            if ($lastComma > $lastDot) {
+                $value = str_replace('.', '', $value);
+                $value = str_replace(',', '.', $value);
+            } else {
+                $value = str_replace(',', '', $value);
+            }
+        } elseif ($lastComma !== false) {
+            $value = str_replace(',', '.', $value);
+        }
+
+        return $value;
     }
 }

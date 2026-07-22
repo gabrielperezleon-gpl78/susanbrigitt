@@ -72,6 +72,10 @@ class SaleController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'unit_price_usd' => $this->normalizeDecimal($request->input('unit_price_usd')),
+            'exchange_rate_value' => $this->normalizeDecimal($request->input('exchange_rate_value')),
+        ]);
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
             'sale_date' => ['required', 'date'],
@@ -150,5 +154,36 @@ class SaleController extends Controller
         return redirect()
             ->route('sales.index')
             ->with('success', 'Venta registrada correctamente.');
+    }
+
+    private function normalizeDecimal(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        $value = str_replace(['$', 'Bs.', 'Bs', ' '], '', $value);
+
+        $lastComma = strrpos($value, ',');
+        $lastDot = strrpos($value, '.');
+
+        if ($lastComma !== false && $lastDot !== false) {
+            if ($lastComma > $lastDot) {
+                $value = str_replace('.', '', $value);
+                $value = str_replace(',', '.', $value);
+            } else {
+                $value = str_replace(',', '', $value);
+            }
+        } elseif ($lastComma !== false) {
+            $value = str_replace(',', '.', $value);
+        }
+
+        return $value;
     }
 }

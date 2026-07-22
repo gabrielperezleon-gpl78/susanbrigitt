@@ -43,50 +43,109 @@
         method="POST"
         class="grid gap-6 xl:grid-cols-[1fr_360px]"
         x-data="{
-            products: @js($products->map(fn ($product) => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'stock' => (int) $product->current_stock,
-                'sale_price_usd' => (float) $product->sale_price_usd,
-                'purchase_price_usd' => (float) $product->purchase_price_usd,
-            ])->values()),
-            productId: @js((int) old('product_id', 0)),
-            quantity: @js((int) old('quantity', 1)),
-            unitPriceUsd: @js((float) old('unit_price_usd', 0)),
-            exchangeRateValue: @js((float) old('exchange_rate_value', $latestExchangeRate?->used_rate ?? 0)),
-            get selectedProduct() {
-                return this.products.find(product => product.id === Number(this.productId)) || null;
-            },
-            selectProduct() {
-                if (this.selectedProduct) {
-                    this.unitPriceUsd = Number(this.selectedProduct.sale_price_usd || 0);
-                }
-            },
-            get unitCostUsd() {
-                return this.selectedProduct ? Number(this.selectedProduct.purchase_price_usd || 0) : 0;
-            },
-            get unitProfitUsd() {
-                return this.unitPriceUsd - this.unitCostUsd;
-            },
-            get totalUsd() {
-                return this.quantity * this.unitPriceUsd;
-            },
-            get totalBs() {
-                return this.totalUsd * this.exchangeRateValue;
-            },
-            get totalProfitUsd() {
-                return this.quantity * this.unitProfitUsd;
-            },
-            get stockAfterSale() {
-                return this.selectedProduct ? this.selectedProduct.stock - this.quantity : 0;
-            },
-            formatNumber(value) {
-                return new Intl.NumberFormat('es-VE', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }).format(value || 0);
+        products: @js($products->map(fn ($product) => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'stock' => (int) $product->current_stock,
+            'sale_price_usd' => (float) $product->sale_price_usd,
+            'purchase_price_usd' => (float) $product->purchase_price_usd,
+        ])->values()),
+
+        productId: @js((int) old('product_id', 0)),
+        quantity: @js((int) old('quantity', 1)),
+        unitPriceUsdInput: @js(old('unit_price_usd', '')),
+        exchangeRateValueInput: @js(old('exchange_rate_value', $latestExchangeRate?->used_rate ?? '')),
+
+        get selectedProduct() {
+            return this.products.find(product => product.id === Number(this.productId)) || null;
+        },
+
+        selectProduct() {
+            if (this.selectedProduct) {
+                this.unitPriceUsdInput = String(this.selectedProduct.sale_price_usd || '');
             }
-        }">
+        },
+
+        parseDecimal(value) {
+            if (value === null || value === undefined || value === '') return 0;
+
+            value = String(value)
+                .trim()
+                .replace(/\s/g, '')
+                .replace('$', '')
+                .replace('Bs.', '')
+                .replace('Bs', '');
+
+            const lastComma = value.lastIndexOf(',');
+            const lastDot = value.lastIndexOf('.');
+
+            if (lastComma !== -1 && lastDot !== -1) {
+                if (lastComma > lastDot) {
+                    value = value.replace(/\./g, '').replace(',', '.');
+                } else {
+                    value = value.replace(/,/g, '');
+                }
+            } else if (lastComma !== -1) {
+                value = value.replace(',', '.');
+            }
+
+            return Number(value) || 0;
+        },
+
+        get unitPriceUsd() {
+            return this.parseDecimal(this.unitPriceUsdInput);
+        },
+
+        get exchangeRateValue() {
+            return this.parseDecimal(this.exchangeRateValueInput);
+        },
+
+        get unitCostUsd() {
+            return this.selectedProduct ? Number(this.selectedProduct.purchase_price_usd || 0) : 0;
+        },
+
+        get unitProfitUsd() {
+            return this.unitPriceUsd - this.unitCostUsd;
+        },
+
+        get totalUsd() {
+            return this.quantity * this.unitPriceUsd;
+        },
+
+        get totalBs() {
+            return this.totalUsd * this.exchangeRateValue;
+        },
+
+        get totalProfitUsd() {
+            return this.quantity * this.unitProfitUsd;
+        },
+
+        get stockAfterSale() {
+            return this.selectedProduct ? this.selectedProduct.stock - this.quantity : 0;
+        },
+
+handleDecimalKey(event) {
+    if (event.code !== 'NumpadDecimal') return;
+
+    event.preventDefault();
+
+    const input = event.target;
+    const separator = '.';
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    input.value = input.value.slice(0, start) + separator + input.value.slice(end);
+    input.setSelectionRange(start + 1, start + 1);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+},
+
+        formatNumber(value) {
+            return new Intl.NumberFormat('es-VE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value || 0);
+        }
+    }">
         @csrf
 
         <div class="space-y-6">
@@ -180,11 +239,11 @@
                         <input
                             id="unit_price_usd"
                             name="unit_price_usd"
-                            type="number"
-                            min="0.01"
-                            step="0.01"
+                            type="text"
+                            inputmode="decimal"
                             value="{{ old('unit_price_usd') }}"
-                            x-model.number="unitPriceUsd"
+                            x-model="unitPriceUsdInput"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
@@ -237,11 +296,11 @@
                         <input
                             id="exchange_rate_value"
                             name="exchange_rate_value"
-                            type="number"
-                            min="0.01"
-                            step="0.0001"
+                            type="text"
+                            inputmode="decimal"
                             value="{{ old('exchange_rate_value', $latestExchangeRate?->used_rate) }}"
-                            x-model.number="exchangeRateValue"
+                            x-model="exchangeRateValueInput"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>

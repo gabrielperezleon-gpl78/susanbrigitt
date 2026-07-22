@@ -43,19 +43,65 @@
         method="POST"
         class="grid gap-6 xl:grid-cols-[1fr_360px]"
         x-data="{
-            purchasePrice: @js((float) old('purchase_price_usd', 0)),
-            salePrice: @js((float) old('sale_price_usd', 0)),
+            purchasePriceInput: @js(old('purchase_price_usd', '')),
+            salePriceInput: @js(old('sale_price_usd', '')),
             initialStock: @js((int) old('initial_stock', 0)),
-            get unitProfit() {
-                return this.salePrice - this.purchasePrice;
-            },
-            get profitMargin() {
-                if (!this.salePrice || this.salePrice <= 0) return 0;
-                return (this.unitProfit / this.salePrice) * 100;
-            },
+            
+            parseDecimal(value) {
+            if (value === null || value === undefined || value === '') return 0;
+
+            value = String(value).trim().replace(/\s/g, '').replace('$', '').replace('Bs.', '').replace('Bs', '');
+
+            const lastComma = value.lastIndexOf(',');
+            const lastDot = value.lastIndexOf('.');
+
+    if (lastComma !== -1 && lastDot !== -1) {
+        if (lastComma > lastDot) {
+            value = value.replace(/\./g, '').replace(',', '.');
+        } else {
+            value = value.replace(/,/g, '');
+        }
+    } else if (lastComma !== -1) {
+        value = value.replace(',', '.');
+    }
+
+    return Number(value) || 0;
+},
+get purchasePrice() {
+    return this.parseDecimal(this.purchasePriceInput);
+},
+get salePrice() {
+    return this.parseDecimal(this.salePriceInput);
+},
+get unitProfit() {
+    return this.salePrice - this.purchasePrice;
+},
+get profitMargin() {
+    if (!this.salePrice || this.salePrice <= 0) return 0;
+    return (this.unitProfit / this.salePrice) * 100;
+},
+get inventoryValue() {
+    return this.purchasePrice * this.initialStock;
+},
             get inventoryValue() {
                 return this.purchasePrice * this.initialStock;
             },
+
+            handleDecimalKey(event) {
+    if (event.code !== 'NumpadDecimal') return;
+
+    event.preventDefault();
+
+    const input = event.target;
+    const separator = '.';
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    input.value = input.value.slice(0, start) + separator + input.value.slice(end);
+    input.setSelectionRange(start + 1, start + 1);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+},
+
             formatNumber(value) {
                 return new Intl.NumberFormat('es-VE', {
                     minimumFractionDigits: 2,
@@ -228,11 +274,11 @@
                         <input
                             id="purchase_price_usd"
                             name="purchase_price_usd"
-                            type="number"
-                            min="0"
-                            step="0.01"
+                            type="text"
+                            inputmode="decimal"
                             value="{{ old('purchase_price_usd') }}"
-                            x-model.number="purchasePrice"
+                            x-model="purchasePriceInput"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
@@ -245,11 +291,11 @@
                         <input
                             id="sale_price_usd"
                             name="sale_price_usd"
-                            type="number"
-                            min="0"
-                            step="0.01"
+                            type="text"
+                            inputmode="decimal"
                             value="{{ old('sale_price_usd') }}"
-                            x-model.number="salePrice"
+                            x-model="salePriceInput"
+                            x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
