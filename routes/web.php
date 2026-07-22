@@ -6,10 +6,11 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\DashboardController;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::view('/dashboard', 'dashboard.index')->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
 
