@@ -331,7 +331,7 @@
             </section>
         </div>
 
-        <aside class="space-y-6">
+        <aside class="space-y-6 xl:sticky xl:top-28 xl:self-start">
             <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
                 <p class="text-xs font-medium uppercase tracking-[0.18em] text-rose-400">
                     Resumen
