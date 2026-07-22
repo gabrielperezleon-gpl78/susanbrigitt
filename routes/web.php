@@ -43,6 +43,10 @@ Route::get('/ventas/nueva', [SaleController::class, 'create'])->name('sales.crea
 
 Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
 
+Route::get('/ventas/{sale}/editar', [SaleController::class, 'edit'])->name('sales.edit');
+
+Route::put('/ventas/{sale}', [SaleController::class, 'update'])->name('sales.update');
+
 Route::get('/tasas', [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
 
 Route::get('/tasas/nueva', [ExchangeRateController::class, 'create'])->name('exchange-rates.create');

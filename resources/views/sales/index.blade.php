@@ -72,6 +72,7 @@
                     <th class="whitespace-nowrap px-5 py-4 text-right">Total Bs</th>
                     <th class="whitespace-nowrap px-5 py-4 text-right">Ganancia</th>
                     <th class="whitespace-nowrap px-5 py-4">Pago</th>
+                    <th class="whitespace-nowrap px-5 py-4 text-right">Acciones</th>
                 </tr>
             </thead>
 
@@ -131,10 +132,18 @@
 
                         {{ $paymentLabels[$sale->payment_method] ?? $sale->payment_method }}
                     </td>
+
+                    <td class="whitespace-nowrap px-5 py-4 text-right">
+                        <a
+                            href="{{ route('sales.edit', $sale) }}"
+                            class="inline-flex rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                            Editar
+                        </a>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="px-5 py-10 text-center text-gray-500">
+                    <td colspan="10" class="px-5 py-10 text-center text-gray-500">
                         No hay ventas registradas.
                     </td>
                 </tr>
