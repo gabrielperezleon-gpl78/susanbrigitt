@@ -210,13 +210,15 @@ handleDecimalKey(event) {
                             name="binance_rate"
                             type="text"
                             inputmode="decimal"
-                            min="0.01"
-                            step="0.0001"
                             value="{{ old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate) }}"
                             x-model.number="binanceRate"
-                            x-on:keydown="handleDecimalKey($event)"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            placeholder="Ejemplo: 37.8000">
+                            class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm text-zinc-500 outline-none"
+                            placeholder="Tasa obtenida automáticamente"
+                            readonly>
+
+                        <p class="mt-2 text-xs leading-5 text-zinc-500">
+                            La tasa Binance se obtiene automáticamente y no admite edición manual.
+                        </p>
 
                         @if ($binanceQuote)
                         <p class="mt-2 text-xs leading-5 text-emerald-700">

@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,6 +140,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/tasas', [ExchangeRateController::class, 'store'])
         ->name('exchange-rates.store');
 
+    Route::get(
+        '/tasas/{exchangeRate}/editar',
+        [ExchangeRateController::class, 'edit']
+    )->name('exchange-rates.edit');
+
+    Route::put(
+        '/tasas/{exchangeRate}',
+        [ExchangeRateController::class, 'update']
+    )->name('exchange-rates.update');
+
     /*
     |--------------------------------------------------------------------------
     | Catálogos
@@ -181,8 +192,10 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::view('/reportes', 'reports.index')
-        ->name('reports.index');
+    Route::get(
+        '/reportes',
+        [ReportsController::class, 'index']
+    )->name('reports.index');
 
     /*
     |--------------------------------------------------------------------------

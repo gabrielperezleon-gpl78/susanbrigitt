@@ -103,6 +103,7 @@
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Usada</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Fuente</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Estado</th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Acciones</th>
                     </tr>
                 </thead>
 
@@ -152,10 +153,17 @@
                             </span>
                             @endif
                         </td>
+                        <td class="whitespace-nowrap px-5 py-4 text-right">
+                            <a
+                                href="{{ route('exchange-rates.edit', $rate) }}"
+                                class="inline-flex rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-[#FFF0F4] hover:text-[#E46F8A]">
+                                Editar
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-12 text-center">
+                        <td colspan="8" class="px-5 py-12 text-center">
                             <p class="text-sm font-semibold text-zinc-900">
                                 Todavía no hay tasas registradas.
                             </p>
