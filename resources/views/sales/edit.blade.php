@@ -5,9 +5,31 @@
 
 @section('content')
 
+@php
+$selectedSaleDate = old(
+'sale_date',
+$sale->sale_date?->format('Y-m-d')
+);
+
+$storedRateChoice =
+$sale->exchange_rate_id
+&& $sale->rate_source
+? $sale->exchange_rate_id
+. '|'
+. $sale->rate_source
+: '';
+
+$initialRateChoice = old(
+'exchange_rate_choice',
+$storedRateChoice
+);
+@endphp
+
 <div class="space-y-8">
     <div>
-        <a href="{{ route('sales.index') }}" class="text-sm font-semibold text-[#E46F8A]">
+        <a
+            href="{{ route('sales.index') }}"
+            class="text-sm font-semibold text-[#E46F8A]">
             ← Volver a ventas
         </a>
 
@@ -20,13 +42,15 @@
         </h1>
 
         <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-            Corrige la venta y actualiza automáticamente el inventario, los ingresos y la ganancia estimada.
+            Corrige la venta y conserva la trazabilidad de la tasa aplicada.
         </p>
     </div>
 
     @if ($errors->any())
     <div class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-        <p class="font-bold">Revisa los datos del formulario.</p>
+        <p class="font-bold">
+            Revisa los datos del formulario.
+        </p>
 
         <ul class="mt-2 list-inside list-disc space-y-1">
             @foreach ($errors->all() as $error)
@@ -37,7 +61,7 @@
     @endif
 
     <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-800">
-        El sistema devolverá al inventario las unidades de la venta original y aplicará después la nueva cantidad. La operación será bloqueada si produce stock negativo.
+        El sistema devolverá al inventario las unidades originales y aplicará después la nueva cantidad.
     </div>
 
     <form
@@ -45,102 +69,135 @@
         method="POST"
         class="grid gap-6 xl:grid-cols-[1fr_360px]"
         x-data="{
-            products: @js($products->map(fn ($product) => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'stock' => (int) $product->current_stock,
-                'available_stock' => (int) $product->current_stock
-                    + ($product->id === $saleItem->product_id
-                        ? (int) $saleItem->quantity
-                        : 0),
-                'sale_price_usd' => (float) $product->sale_price_usd,
-                'purchase_price_usd' => (float) $product->purchase_price_usd,
-                'unit_measure' => $product->unitMeasure?->abbreviation
-                    ?? $product->unitMeasure?->name
-                    ?? '',
-            ])->values()),
+            products: @js(
+                $products->map(fn ($product) => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'available_stock' =>
+                        (int) $product->current_stock
+                        + (
+                            $product->id === $saleItem->product_id
+                                ? (int) $saleItem->quantity
+                                : 0
+                        ),
+                    'sale_price_usd' =>
+                        (float) $product->sale_price_usd,
+                    'purchase_price_usd' =>
+                        (float) $product->purchase_price_usd,
+                    'unit_measure' =>
+                        $product->unitMeasure?->abbreviation
+                        ?? $product->unitMeasure?->name
+                        ?? '',
+                ])->values()
+            ),
+
+            rateChoices: @js($rateChoices),
+
+            originalProductId: @js(
+                (int) $saleItem->product_id
+            ),
+
+            originalUnitCostUsd: @js(
+                (float) $saleItem->unit_cost_usd
+            ),
 
             productId: @js(
-                (int) old('product_id', $saleItem->product_id)
+                (int) old(
+                    'product_id',
+                    $saleItem->product_id
+                )
             ),
 
             quantity: @js(
-                (int) old('quantity', $saleItem->quantity)
+                (int) old(
+                    'quantity',
+                    $saleItem->quantity
+                )
             ),
 
             unitPriceUsdInput: @js(
-                old('unit_price_usd', $saleItem->unit_price_usd)
+                old(
+                    'unit_price_usd',
+                    $saleItem->unit_price_usd
+                )
             ),
 
-            exchangeRateValueInput: @js(
-                old('exchange_rate_value', $sale->exchange_rate_value)
+            saleDate: @js($selectedSaleDate),
+
+            exchangeRateChoice: @js(
+                $initialRateChoice
             ),
-
-            rateSource: @js(
-                old('rate_source', $sale->rate_source)
-            ),
-
-            exchangeRateId: @js(
-                old('exchange_rate_id', $sale->exchange_rate_id)
-            ),
-
-            latestExchangeRateId: @js(
-                $latestExchangeRate?->id
-            ),
-
-            rateOptions: {
-                bcv: @js(
-                    (string) (
-                        $latestExchangeRate?->bcv_rate
-                        ?? ($sale->rate_source === 'bcv'
-                            ? $sale->exchange_rate_value
-                            : '')
-                    )
-                ),
-
-                binance: @js(
-                    (string) (
-                        $latestExchangeRate?->binance_rate
-                        ?? ($sale->rate_source === 'binance'
-                            ? $sale->exchange_rate_value
-                            : '')
-                    )
-                ),
-
-                manual: @js(
-                    (string) (
-                        $latestExchangeRate?->manual_rate
-                        ?? ($sale->rate_source === 'manual'
-                            ? $sale->exchange_rate_value
-                            : '')
-                    )
-                ),
-            },
 
             get selectedProduct() {
                 return this.products.find(
-                    product => product.id === Number(this.productId)
+                    product =>
+                        product.id === Number(this.productId)
                 ) || null;
             },
 
-            selectProduct() {
-                if (this.selectedProduct) {
-                    this.unitPriceUsdInput = String(
-                        this.selectedProduct.sale_price_usd || ''
-                    );
-                }
+            get ratesForSelectedDate() {
+                return this.rateChoices.filter(
+                    choice =>
+                        choice.rate_date === this.saleDate
+                        && (
+                            choice.status === 'active'
+                            || choice.is_current_sale_choice
+                        )
+                );
             },
 
-            updateExchangeRateValue() {
-                const value = this.rateOptions[this.rateSource] || '';
+            get selectedRateChoice() {
+                return this.rateChoices.find(
+                    choice =>
+                        choice.key === String(
+                            this.exchangeRateChoice
+                        )
+                ) || null;
+            },
 
-                if (value !== '') {
-                    this.exchangeRateValueInput = String(value);
+            initializeForm() {
+                this.syncRateSelection(false);
+            },
+
+            selectProduct() {
+                if (! this.selectedProduct) {
+                    return;
                 }
 
-                if (this.latestExchangeRateId) {
-                    this.exchangeRateId = this.latestExchangeRateId;
+                this.unitPriceUsdInput = String(
+                    this.selectedProduct.sale_price_usd || ''
+                );
+            },
+
+            syncRateSelection(forceDefault = false) {
+                const choices = this.ratesForSelectedDate;
+
+                const currentChoiceIsValid = choices.some(
+                    choice =>
+                        choice.key === String(
+                            this.exchangeRateChoice
+                        )
+                );
+
+                if (
+                    currentChoiceIsValid
+                    && ! forceDefault
+                ) {
+                    return;
                 }
+
+                const preferredChoice =
+                    choices.find(
+                        choice =>
+                            choice.source === 'binance'
+                    )
+                    || choices[0]
+                    || null;
+
+                this.exchangeRateChoice =
+                    preferredChoice
+                        ? preferredChoice.key
+                        : '';
             },
 
             parseDecimal(value) {
@@ -162,7 +219,10 @@
                 const lastComma = value.lastIndexOf(',');
                 const lastDot = value.lastIndexOf('.');
 
-                if (lastComma !== -1 && lastDot !== -1) {
+                if (
+                    lastComma !== -1
+                    && lastDot !== -1
+                ) {
                     if (lastComma > lastDot) {
                         value = value
                             .replace(/\./g, '')
@@ -178,26 +238,36 @@
             },
 
             handleDecimalKey(event) {
-                if (event.code !== 'NumpadDecimal') return;
+                if (event.code !== 'NumpadDecimal') {
+                    return;
+                }
 
                 event.preventDefault();
 
                 const input = event.target;
-                const separator = '.';
-                const start = input.selectionStart
+
+                const start =
+                    input.selectionStart
                     ?? input.value.length;
-                const end = input.selectionEnd
+
+                const end =
+                    input.selectionEnd
                     ?? input.value.length;
 
                 input.value =
                     input.value.slice(0, start)
-                    + separator
+                    + '.'
                     + input.value.slice(end);
 
-                input.setSelectionRange(start + 1, start + 1);
+                input.setSelectionRange(
+                    start + 1,
+                    start + 1
+                );
 
                 input.dispatchEvent(
-                    new Event('input', { bubbles: true })
+                    new Event('input', {
+                        bubbles: true
+                    })
                 );
             },
 
@@ -208,40 +278,62 @@
             },
 
             get exchangeRateValue() {
-                return this.parseDecimal(
-                    this.exchangeRateValueInput
-                );
+                return this.selectedRateChoice
+                    ? Number(
+                        this.selectedRateChoice.value || 0
+                    )
+                    : 0;
             },
 
             get unitCostUsd() {
-                if (! this.selectedProduct) return 0;
+                if (! this.selectedProduct) {
+                    return 0;
+                }
+
+                if (
+                    Number(this.selectedProduct.id)
+                    === Number(this.originalProductId)
+                    && Number(this.originalUnitCostUsd) > 0
+                ) {
+                    return Number(
+                        this.originalUnitCostUsd
+                    );
+                }
 
                 return Number(
-                    this.selectedProduct.purchase_price_usd || 0
+                    this.selectedProduct
+                        .purchase_price_usd || 0
                 );
             },
 
             get unitProfitUsd() {
-                return this.unitPriceUsd - this.unitCostUsd;
+                return this.unitPriceUsd
+                    - this.unitCostUsd;
             },
 
             get totalUsd() {
-                return this.quantity * this.unitPriceUsd;
+                return Number(this.quantity || 0)
+                    * this.unitPriceUsd;
             },
 
             get totalBs() {
-                return this.totalUsd * this.exchangeRateValue;
+                return this.totalUsd
+                    * this.exchangeRateValue;
             },
 
             get totalProfitUsd() {
-                return this.quantity * this.unitProfitUsd;
+                return Number(this.quantity || 0)
+                    * this.unitProfitUsd;
             },
 
             get stockAfterSale() {
-                if (! this.selectedProduct) return 0;
-
-                return this.selectedProduct.available_stock
-                    - this.quantity;
+                return this.selectedProduct
+                    ? Number(
+                        this.selectedProduct
+                            .available_stock
+                    )
+                    - Number(this.quantity || 0)
+                    : 0;
             },
 
             formatNumber(value) {
@@ -249,8 +341,25 @@
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 }).format(value || 0);
+            },
+
+            formatRate(value) {
+                return new Intl.NumberFormat('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(value || 0);
+            },
+
+            formatRateChoice(choice) {
+                const historical =
+                    choice.status !== 'active'
+                        ? ' · Histórica'
+                        : '';
+
+                return `${choice.source_label} (${choice.rate_date_label}, ${choice.rate_time}) — ${this.formatRate(choice.value)}${historical}`;
             }
-        }">
+        }"
+        x-init="initializeForm()">
         @csrf
         @method('PUT')
 
@@ -262,27 +371,34 @@
                     </h2>
 
                     <p class="mt-1 text-sm text-zinc-500">
-                        Modifica producto, cantidad, precio, cliente o fecha.
+                        Modifica el producto, la cantidad, el precio, el cliente o la fecha.
                     </p>
                 </div>
 
                 <div class="grid gap-5 p-6 md:grid-cols-2">
                     <div>
-                        <label for="sale_date" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Fecha de venta <span class="text-[#E46F8A]">*</span>
+                        <label
+                            for="sale_date"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Fecha de venta
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <input
                             id="sale_date"
                             name="sale_date"
                             type="date"
-                            value="{{ old('sale_date', optional($sale->sale_date)->format('Y-m-d')) }}"
+                            value="{{ $selectedSaleDate }}"
+                            x-model="saleDate"
+                            x-on:change="syncRateSelection(true)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
 
                     <div>
-                        <label for="customer_name" class="mb-2 block text-sm font-semibold text-gray-700">
+                        <label
+                            for="customer_name"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
                             Cliente
                         </label>
 
@@ -290,14 +406,20 @@
                             id="customer_name"
                             name="customer_name"
                             type="text"
-                            value="{{ old('customer_name', $sale->customer_name) }}"
+                            value="{{ old(
+                                'customer_name',
+                                $sale->customer_name
+                            ) }}"
                             placeholder="Cliente ocasional"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                     </div>
 
                     <div class="md:col-span-2">
-                        <label for="product_id" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Producto <span class="text-[#E46F8A]">*</span>
+                        <label
+                            for="product_id"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Producto
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <select
@@ -307,14 +429,17 @@
                             x-on:change="selectProduct()"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
-                            <option value="">Seleccionar producto</option>
+                            <option value="">
+                                Seleccionar producto
+                            </option>
 
                             @foreach ($products as $product)
                             @php
                             $availableStock =
                             (int) $product->current_stock
                             + (
-                            $product->id === $saleItem->product_id
+                            $product->id
+                            === $saleItem->product_id
                             ? (int) $saleItem->quantity
                             : 0
                             );
@@ -323,12 +448,13 @@
                             <option
                                 value="{{ $product->id }}"
                                 @selected(
-                                old('product_id', $saleItem->product_id)
-                                == $product->id
+                                old( 'product_id' ,
+                                $saleItem->product_id
+                                ) == $product->id
                                 )
                                 >
                                 {{ $product->name }}
-                                · Disponible para corrección:
+                                · Disponible:
                                 {{ $availableStock }}
                                 {{ $product->unitMeasure?->abbreviation
                                         ?? $product->unitMeasure?->name
@@ -337,16 +463,26 @@
                             @endforeach
                         </select>
 
-                        <p class="mt-2 text-xs text-gray-400" x-show="selectedProduct">
+                        <p
+                            class="mt-2 text-xs text-gray-400"
+                            x-show="selectedProduct"
+                            x-cloak>
                             Disponible para esta corrección:
-                            <span x-text="selectedProduct?.available_stock || 0"></span>
-                            <span x-text="selectedProduct?.unit_measure || 'unidades'"></span>.
+
+                            <span
+                                x-text="selectedProduct?.available_stock || 0"></span>
+
+                            <span
+                                x-text="selectedProduct?.unit_measure || 'unidades'"></span>.
                         </p>
                     </div>
 
                     <div>
-                        <label for="quantity" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Cantidad vendida <span class="text-[#E46F8A]">*</span>
+                        <label
+                            for="quantity"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Cantidad vendida
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <input
@@ -355,15 +491,21 @@
                             type="number"
                             min="1"
                             step="1"
-                            value="{{ old('quantity', $saleItem->quantity) }}"
+                            value="{{ old(
+                                'quantity',
+                                $saleItem->quantity
+                            ) }}"
                             x-model.number="quantity"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
 
                     <div>
-                        <label for="unit_price_usd" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Precio unitario USD <span class="text-[#E46F8A]">*</span>
+                        <label
+                            for="unit_price_usd"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Precio unitario USD
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <input
@@ -371,7 +513,10 @@
                             name="unit_price_usd"
                             type="text"
                             inputmode="decimal"
-                            value="{{ old('unit_price_usd', $saleItem->unit_price_usd) }}"
+                            value="{{ old(
+                                'unit_price_usd',
+                                $saleItem->unit_price_usd
+                            ) }}"
                             x-model="unitPriceUsdInput"
                             x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
@@ -387,54 +532,92 @@
                     </h2>
 
                     <p class="mt-1 text-sm text-zinc-500">
-                        Corrige la fuente, tasa aplicada o forma de pago.
+                        Selecciona una tasa registrada para la misma fecha de la venta.
                     </p>
                 </div>
 
                 <div class="grid gap-5 p-6 md:grid-cols-2">
-                    <input
-                        type="hidden"
-                        name="exchange_rate_id"
-                        x-model="exchangeRateId">
-
-                    <div>
-                        <label for="rate_source" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Fuente de tasa <span class="text-[#E46F8A]">*</span>
+                    <div class="md:col-span-2">
+                        <label
+                            for="exchange_rate_choice"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tasa registrada para la venta
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <select
-                            id="rate_source"
-                            name="rate_source"
-                            x-model="rateSource"
-                            x-on:change="updateExchangeRateValue()"
+                            id="exchange_rate_choice"
+                            name="exchange_rate_choice"
+                            x-model="exchangeRateChoice"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
-                            <option value="binance">Binance</option>
-                            <option value="bcv">BCV</option>
-                            <option value="manual">Manual</option>
+                            <option value="">
+                                Seleccionar tasa registrada
+                            </option>
+
+                            <template
+                                x-for="choice in ratesForSelectedDate"
+                                :key="choice.key">
+                                <option
+                                    :value="choice.key"
+                                    x-text="formatRateChoice(choice)"></option>
+                            </template>
                         </select>
+
+                        <div
+                            class="mt-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
+                            x-show="saleDate && ratesForSelectedDate.length === 0"
+                            x-cloak>
+                            <p class="text-sm font-semibold text-red-700">
+                                No existen tasas para esta fecha.
+                            </p>
+
+                            <a
+                                href="{{ route('exchange-rates.create') }}"
+                                class="mt-2 inline-flex text-xs font-semibold text-red-700 underline">
+                                Registrar una tasa
+                            </a>
+                        </div>
                     </div>
 
                     <div>
-                        <label for="exchange_rate_value" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Tasa aplicada <span class="text-[#E46F8A]">*</span>
+                        <label class="mb-2 block text-sm font-semibold text-gray-700">
+                            Fuente seleccionada
                         </label>
 
                         <input
-                            id="exchange_rate_value"
-                            name="exchange_rate_value"
                             type="text"
-                            inputmode="decimal"
-                            value="{{ old('exchange_rate_value', $sale->exchange_rate_value) }}"
-                            x-model="exchangeRateValueInput"
-                            x-on:keydown="handleDecimalKey($event)"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            required>
+                            :value="selectedRateChoice?.source_label || ''"
+                            placeholder="Selecciona una tasa"
+                            class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm text-zinc-500 outline-none"
+                            readonly>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tasa aplicada
+                        </label>
+
+                        <input
+                            type="text"
+                            :value="
+                                selectedRateChoice
+                                    ? formatRate(
+                                        selectedRateChoice.value
+                                    )
+                                    : ''
+                            "
+                            placeholder="Selecciona una tasa"
+                            class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 outline-none"
+                            readonly>
                     </div>
 
                     <div class="md:col-span-2">
-                        <label for="payment_method" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Forma de pago <span class="text-[#E46F8A]">*</span>
+                        <label
+                            for="payment_method"
+                            class="mb-2 block text-sm font-semibold text-gray-700">
+                            Forma de pago
+                            <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <select
@@ -442,37 +625,29 @@
                             name="payment_method"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
-                            <option value="">Seleccionar forma de pago</option>
-
-                            <option value="pago_movil"
-                                @selected(old('payment_method', $sale->payment_method) === 'pago_movil')>
-                                Pago móvil
+                            <option value="">
+                                Seleccionar forma de pago
                             </option>
 
-                            <option value="transferencia_bs"
-                                @selected(old('payment_method', $sale->payment_method) === 'transferencia_bs')>
-                                Transferencia Bs
+                            @foreach ([
+                            'pago_movil' => 'Pago móvil',
+                            'transferencia_bs' => 'Transferencia Bs',
+                            'efectivo_usd' => 'Efectivo USD',
+                            'binance' => 'Binance',
+                            'zelle' => 'Zelle',
+                            'mixto' => 'Mixto',
+                            ] as $value => $label)
+                            <option
+                                value="{{ $value }}"
+                                @selected(
+                                old( 'payment_method' ,
+                                $sale->payment_method
+                                ) === $value
+                                )
+                                >
+                                {{ $label }}
                             </option>
-
-                            <option value="efectivo_usd"
-                                @selected(old('payment_method', $sale->payment_method) === 'efectivo_usd')>
-                                Efectivo USD
-                            </option>
-
-                            <option value="binance"
-                                @selected(old('payment_method', $sale->payment_method) === 'binance')>
-                                Binance
-                            </option>
-
-                            <option value="zelle"
-                                @selected(old('payment_method', $sale->payment_method) === 'zelle')>
-                                Zelle
-                            </option>
-
-                            <option value="mixto"
-                                @selected(old('payment_method', $sale->payment_method) === 'mixto')>
-                                Mixto
-                            </option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -487,7 +662,7 @@
                     id="notes"
                     name="notes"
                     rows="4"
-                    placeholder="Notas sobre la venta o la corrección..."
+                    placeholder="Notas sobre la venta o la corrección."
                     class="mt-5 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">{{ old('notes', $sale->notes) }}</textarea>
             </section>
         </div>
@@ -500,31 +675,56 @@
 
                 <div class="mt-5 space-y-4">
                     <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
-                        <span class="text-sm text-zinc-500">Total USD</span>
+                        <span class="text-sm text-zinc-500">
+                            Total USD
+                        </span>
 
-                        <span class="text-sm font-semibold text-zinc-900">
+                        <strong>
                             $<span x-text="formatNumber(totalUsd)"></span>
-                        </span>
+                        </strong>
                     </div>
 
                     <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
-                        <span class="text-sm text-zinc-500">Total Bs</span>
-
-                        <span class="text-sm font-semibold text-zinc-900">
-                            Bs. <span x-text="formatNumber(totalBs)"></span>
+                        <span class="text-sm text-zinc-500">
+                            Tasa aplicada
                         </span>
+
+                        <strong>
+                            <span
+                                x-text="
+                                    selectedRateChoice
+                                        ? formatRate(
+                                            exchangeRateValue
+                                        )
+                                        : '—'
+                                "></span>
+                        </strong>
                     </div>
 
                     <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
-                        <span class="text-sm text-zinc-500">Ganancia estimada</span>
+                        <span class="text-sm text-zinc-500">
+                            Total Bs
+                        </span>
 
-                        <span
-                            class="text-sm font-semibold"
-                            :class="totalProfitUsd >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'">
+                        <strong>
+                            Bs.
+                            <span x-text="formatNumber(totalBs)"></span>
+                        </strong>
+                    </div>
+
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <span class="text-sm text-zinc-500">
+                            Ganancia estimada
+                        </span>
+
+                        <strong
+                            :class="
+                                totalProfitUsd >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                            ">
                             $<span x-text="formatNumber(totalProfitUsd)"></span>
-                        </span>
+                        </strong>
                     </div>
 
                     <div>
@@ -533,13 +733,25 @@
                         </span>
 
                         <p
-                            class="mt-2 text-3xl font-semibold tracking-tight"
-                            :class="stockAfterSale >= 0
-                                ? 'text-[#E46F8A]'
-                                : 'text-red-600'"
+                            class="mt-2 text-3xl font-semibold"
+                            :class="
+                                stockAfterSale >= 0
+                                    ? 'text-[#E46F8A]'
+                                    : 'text-red-600'
+                            "
                             x-text="stockAfterSale"></p>
                     </div>
                 </div>
+            </section>
+
+            <section class="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+                <p class="text-sm font-semibold text-blue-900">
+                    Tasa vinculada
+                </p>
+
+                <p class="mt-2 text-sm leading-6 text-blue-700">
+                    La venta conservará la fuente y el valor exacto seleccionados.
+                </p>
             </section>
 
             <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
@@ -548,7 +760,7 @@
                 </p>
 
                 <p class="mt-2 text-sm leading-6 text-zinc-600">
-                    La venta original se revertirá antes de aplicar la nueva cantidad o el nuevo producto.
+                    La venta original será revertida antes de aplicar los cambios.
                 </p>
             </section>
 
