@@ -104,6 +104,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/compras/{purchase}', [PurchaseController::class, 'update'])
         ->name('purchases.update');
 
+    Route::patch(
+        '/compras/{purchase}/anular',
+        [PurchaseController::class, 'cancel']
+    )->name('purchases.cancel');
+
     /*
     |--------------------------------------------------------------------------
     | Ventas

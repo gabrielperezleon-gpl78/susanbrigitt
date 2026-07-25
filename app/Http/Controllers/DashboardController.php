@@ -43,13 +43,15 @@ class DashboardController extends Controller
             )
             ->value('total') ?? 0;
 
-        $totalPurchasesUsd = Purchase::sum(
-            'total_usd'
-        );
+        /*
+ * Solamente las compras confirmadas participan
+ * en los indicadores financieros.
+ */
+        $totalPurchasesUsd = Purchase::confirmed()
+            ->sum('total_usd');
 
-        $totalPurchasesBs = Purchase::sum(
-            'total_bs'
-        );
+        $totalPurchasesBs = Purchase::confirmed()
+            ->sum('total_bs');
 
         /*
          * Solamente las ventas confirmadas participan

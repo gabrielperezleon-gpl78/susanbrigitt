@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\ExchangeRate;
 use App\Models\Product;
+use App\Models\Purchase;
 use App\Models\Sale;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
@@ -608,6 +609,10 @@ class ReportsController extends Controller
                 'products.id',
                 '=',
                 'purchase_items.product_id'
+            )
+            ->where(
+                'purchases.status',
+                Purchase::STATUS_CONFIRMED
             )
             ->whereBetween(
                 'purchases.purchase_date',

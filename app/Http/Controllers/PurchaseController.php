@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Models\PurchaseLog;
 
 class PurchaseController extends Controller
 {
@@ -24,29 +25,42 @@ class PurchaseController extends Controller
                 'supplier',
                 'exchangeRate',
                 'items.product.unitMeasure',
+                'cancelledBy:id,name',
             ])
             ->latest('purchase_date')
             ->latest('id')
             ->get();
 
-        $totalPurchases = $purchases->count();
+        $confirmedPurchases = $purchases->where(
+            'status',
+            Purchase::STATUS_CONFIRMED
+        );
 
-        $totalUnits = $purchases->sum(
+        $totalPurchases = $confirmedPurchases->count();
+
+        $cancelledPurchasesCount = $purchases
+            ->where(
+                'status',
+                Purchase::STATUS_CANCELLED
+            )
+            ->count();
+
+        $totalUnits = $confirmedPurchases->sum(
             fn(Purchase $purchase) =>
             $purchase->items->sum('quantity')
         );
 
-        $totalUsd = $purchases->sum(
+        $totalUsd = $confirmedPurchases->sum(
             fn(Purchase $purchase) =>
             (float) ($purchase->total_usd ?? 0)
         );
 
-        $totalBs = $purchases->sum(
+        $totalBs = $confirmedPurchases->sum(
             fn(Purchase $purchase) =>
             (float) ($purchase->total_bs ?? 0)
         );
 
-        $averageRate = $purchases
+        $averageRate = $confirmedPurchases
             ->filter(
                 fn(Purchase $purchase) =>
                 $purchase->exchange_rate_value !== null
@@ -56,6 +70,7 @@ class PurchaseController extends Controller
         return view('purchases.index', compact(
             'purchases',
             'totalPurchases',
+            'cancelledPurchasesCount',
             'totalUnits',
             'totalUsd',
             'totalBs',
@@ -229,6 +244,11 @@ class PurchaseController extends Controller
     public function edit(
         Purchase $purchase
     ): View {
+        abort_if(
+            $purchase->isCancelled(),
+            403,
+            'La compra anulada no puede editarse.'
+        );
         $purchase->load([
             'supplier',
             'exchangeRate',
@@ -292,6 +312,12 @@ class PurchaseController extends Controller
         Request $request,
         Purchase $purchase
     ): RedirectResponse {
+        abort_if(
+            $purchase->isCancelled(),
+            403,
+            'La compra anulada no puede editarse.'
+        );
+
         $request->merge([
             'unit_cost_usd' => $this->normalizeDecimal(
                 $request->input('unit_cost_usd')
@@ -310,6 +336,12 @@ class PurchaseController extends Controller
                 ->whereKey($purchase->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            abort_if(
+                $lockedPurchase->isCancelled(),
+                409,
+                'La compra ya fue anulada.'
+            );
 
             $rateSelection = $this->resolveRateSelection(
                 $validated,
@@ -525,6 +557,247 @@ class PurchaseController extends Controller
             ->with(
                 'success',
                 'Compra actualizada correctamente.'
+            );
+    }
+
+    public function cancel(
+        Request $request,
+        Purchase $purchase
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'cancellation_reason' => [
+                'required',
+                'string',
+                'min:5',
+                'max:1000',
+            ],
+        ], [
+            'cancellation_reason.required' =>
+            'Debes indicar el motivo de la anulación.',
+
+            'cancellation_reason.min' =>
+            'El motivo debe contener al menos 5 caracteres.',
+
+            'cancellation_reason.max' =>
+            'El motivo no puede superar los 1000 caracteres.',
+        ]);
+
+        DB::transaction(function () use (
+            $validated,
+            $purchase,
+            $request
+        ) {
+            $lockedPurchase = Purchase::query()
+                ->whereKey($purchase->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedPurchase->isCancelled()) {
+                throw ValidationException::withMessages([
+                    'cancellation_reason' =>
+                    'La compra ya fue anulada anteriormente.',
+                ]);
+            }
+
+            $items = PurchaseItem::query()
+                ->where(
+                    'purchase_id',
+                    $lockedPurchase->id
+                )
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($items->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'cancellation_reason' =>
+                    'La compra no tiene productos asociados.',
+                ]);
+            }
+
+            $quantitiesByProduct = $items
+                ->groupBy('product_id')
+                ->map(
+                    fn($productItems) =>
+                    (int) $productItems->sum('quantity')
+                );
+
+            $products = Product::query()
+                ->whereIn(
+                    'id',
+                    $quantitiesByProduct->keys()->all()
+                )
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach (
+                $quantitiesByProduct
+                as $productId => $quantity
+            ) {
+                $product = $products->get(
+                    (int) $productId
+                );
+
+                if (! $product) {
+                    throw ValidationException::withMessages([
+                        'cancellation_reason' =>
+                        'No fue posible localizar uno de los productos de la compra.',
+                    ]);
+                }
+
+                if (
+                    (int) $product->current_stock
+                    < (int) $quantity
+                ) {
+                    throw ValidationException::withMessages([
+                        'cancellation_reason' =>
+                        'No es posible anular la compra porque parte de las unidades ya fue vendida o utilizada.',
+                    ]);
+                }
+            }
+
+            $previousData = [
+                'purchase' => [
+                    'id' => $lockedPurchase->id,
+
+                    'purchase_date' =>
+                    $lockedPurchase->purchase_date
+                        ?->format('Y-m-d'),
+
+                    'supplier_id' =>
+                    $lockedPurchase->supplier_id,
+
+                    'exchange_rate_id' =>
+                    $lockedPurchase->exchange_rate_id,
+
+                    'total_usd' =>
+                    (float) $lockedPurchase->total_usd,
+
+                    'exchange_rate_value' =>
+                    (float) $lockedPurchase
+                        ->exchange_rate_value,
+
+                    'total_bs' =>
+                    (float) $lockedPurchase->total_bs,
+
+                    'rate_source' =>
+                    $lockedPurchase->rate_source,
+
+                    'payment_method' =>
+                    $lockedPurchase->payment_method,
+
+                    'notes' =>
+                    $lockedPurchase->notes,
+
+                    'status' =>
+                    $lockedPurchase->status,
+                ],
+
+                'items' => $items
+                    ->map(
+                        fn(PurchaseItem $item) => [
+                            'id' => $item->id,
+
+                            'product_id' =>
+                            $item->product_id,
+
+                            'quantity' =>
+                            (int) $item->quantity,
+
+                            'unit_cost_usd' =>
+                            (float) $item->unit_cost_usd,
+
+                            'total_usd' =>
+                            (float) $item->total_usd,
+                        ]
+                    )
+                    ->values()
+                    ->all(),
+            ];
+
+            foreach (
+                $quantitiesByProduct
+                as $productId => $quantity
+            ) {
+                $product = $products->get(
+                    (int) $productId
+                );
+
+                $product->current_stock =
+                    (int) $product->current_stock
+                    - (int) $quantity;
+
+                $product->save();
+
+                InventoryMovement::create([
+                    'product_id' =>
+                    $product->id,
+
+                    'movementable_type' =>
+                    Purchase::class,
+
+                    'movementable_id' =>
+                    $lockedPurchase->id,
+
+                    'type' =>
+                    'adjustment_out',
+
+                    'quantity' =>
+                    (int) $quantity,
+
+                    'stock_after_movement' =>
+                    $product->current_stock,
+
+                    'movement_date' =>
+                    now()->toDateString(),
+
+                    'notes' =>
+                    'Reversión por anulación de la compra #'
+                        . $lockedPurchase->id
+                        . '. Motivo: '
+                        . $validated['cancellation_reason'],
+                ]);
+            }
+
+            $lockedPurchase->update([
+                'status' =>
+                Purchase::STATUS_CANCELLED,
+
+                'cancelled_at' =>
+                now(),
+
+                'cancelled_by' =>
+                $request->user()->id,
+
+                'cancellation_reason' =>
+                $validated['cancellation_reason'],
+            ]);
+
+            PurchaseLog::create([
+                'purchase_id' =>
+                $lockedPurchase->id,
+
+                'user_id' =>
+                $request->user()->id,
+
+                'action' =>
+                'cancelled',
+
+                'reason' =>
+                $validated['cancellation_reason'],
+
+                'previous_data' =>
+                $previousData,
+            ]);
+        });
+
+        return redirect()
+            ->route('purchases.index')
+            ->with(
+                'success',
+                'Compra anulada correctamente. El inventario fue ajustado.'
             );
     }
 
