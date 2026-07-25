@@ -7,6 +7,7 @@ use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SaleLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -22,33 +23,54 @@ class SaleController extends Controller
             ->with([
                 'items.product.unitMeasure',
                 'exchangeRate',
+                'cancelledBy',
             ])
             ->orderByDesc('sale_date')
             ->orderByDesc('id')
             ->get();
 
-        $totalSales = $sales->count();
-
-        $totalUnits = $sales->sum(
-            fn($sale) => $sale->items->sum('quantity')
+        /*
+     * Los indicadores financieros incluyen solamente
+     * las ventas confirmadas.
+     */
+        $confirmedSales = $sales->filter(
+            fn(Sale $sale) =>
+            $sale->status === Sale::STATUS_CONFIRMED
         );
 
-        $totalUsd = $sales->sum(
-            fn($sale) => (float) ($sale->total_usd ?? 0)
+        $totalSales = $confirmedSales->count();
+
+        $cancelledSalesCount = $sales->filter(
+            fn(Sale $sale) =>
+            $sale->status === Sale::STATUS_CANCELLED
+        )->count();
+
+        $totalUnits = $confirmedSales->sum(
+            fn(Sale $sale) =>
+            $sale->items->sum('quantity')
         );
 
-        $totalBs = $sales->sum(
-            fn($sale) => (float) ($sale->total_bs ?? 0)
+        $totalUsd = $confirmedSales->sum(
+            fn(Sale $sale) =>
+            (float) ($sale->total_usd ?? 0)
         );
 
-        $totalProfitUsd = $sales->sum(
-            fn($sale) =>
-            (float) ($sale->estimated_profit_usd ?? 0)
+        $totalBs = $confirmedSales->sum(
+            fn(Sale $sale) =>
+            (float) ($sale->total_bs ?? 0)
+        );
+
+        $totalProfitUsd = $confirmedSales->sum(
+            fn(Sale $sale) =>
+            (float) (
+                $sale->estimated_profit_usd ?? 0
+            )
         );
 
         return view('sales.index', compact(
             'sales',
             'totalSales',
+            'cancelledSalesCount',
             'totalUnits',
             'totalUsd',
             'totalBs',
@@ -223,6 +245,12 @@ class SaleController extends Controller
 
     public function edit(Sale $sale): View
     {
+        abort_if(
+            $sale->isCancelled(),
+            403,
+            'Las ventas anuladas no pueden editarse.'
+        );
+
         $sale->load([
             'items.product.unitMeasure',
             'exchangeRate',
@@ -274,6 +302,11 @@ class SaleController extends Controller
         Request $request,
         Sale $sale
     ): RedirectResponse {
+        abort_if(
+            $sale->isCancelled(),
+            403,
+            'Las ventas anuladas no pueden editarse.'
+        );
         $request->merge([
             'unit_price_usd' => $this->normalizeDecimal(
                 $request->input('unit_price_usd')
@@ -290,7 +323,11 @@ class SaleController extends Controller
                 ->whereKey($sale->id)
                 ->lockForUpdate()
                 ->firstOrFail();
-
+            abort_if(
+                $lockedSale->isCancelled(),
+                409,
+                'La venta ya fue anulada.'
+            );
             $rateSelection = $this->resolveRateSelection(
                 $validated,
                 $lockedSale
@@ -513,6 +550,258 @@ class SaleController extends Controller
             ->with(
                 'success',
                 'Venta actualizada correctamente.'
+            );
+    }
+
+    public function cancel(
+        Request $request,
+        Sale $sale
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'cancellation_reason' => [
+                'required',
+                'string',
+                'min:5',
+                'max:1000',
+            ],
+        ], [
+            'cancellation_reason.required' =>
+            'Debes indicar el motivo de la anulación.',
+
+            'cancellation_reason.min' =>
+            'El motivo de la anulación debe contener al menos 5 caracteres.',
+
+            'cancellation_reason.max' =>
+            'El motivo de la anulación no puede superar los 1000 caracteres.',
+        ]);
+
+        DB::transaction(function () use (
+            $validated,
+            $sale,
+            $request
+        ) {
+            $lockedSale = Sale::query()
+                ->whereKey($sale->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedSale->isCancelled()) {
+                throw ValidationException::withMessages([
+                    'cancellation_reason' =>
+                    'La venta ya fue anulada anteriormente.',
+                ]);
+            }
+
+            $items = SaleItem::query()
+                ->where(
+                    'sale_id',
+                    $lockedSale->id
+                )
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($items->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'cancellation_reason' =>
+                    'La venta no tiene productos asociados y no puede revertirse automáticamente.',
+                ]);
+            }
+
+            /*
+         * Se conserva una fotografía de los datos
+         * anteriores a la anulación.
+         */
+            $previousData = [
+                'sale' => [
+                    'id' =>
+                    $lockedSale->id,
+
+                    'sale_date' =>
+                    $lockedSale->sale_date
+                        ?->format('Y-m-d'),
+
+                    'customer_name' =>
+                    $lockedSale->customer_name,
+
+                    'total_usd' =>
+                    (float) $lockedSale->total_usd,
+
+                    'exchange_rate_value' =>
+                    (float) $lockedSale
+                        ->exchange_rate_value,
+
+                    'total_bs' =>
+                    (float) $lockedSale->total_bs,
+
+                    'estimated_profit_usd' =>
+                    (float) $lockedSale
+                        ->estimated_profit_usd,
+
+                    'rate_source' =>
+                    $lockedSale->rate_source,
+
+                    'payment_method' =>
+                    $lockedSale->payment_method,
+
+                    'notes' =>
+                    $lockedSale->notes,
+
+                    'status' =>
+                    $lockedSale->status,
+                ],
+
+                'items' => $items
+                    ->map(
+                        fn(SaleItem $item) => [
+                            'id' =>
+                            $item->id,
+
+                            'product_id' =>
+                            $item->product_id,
+
+                            'quantity' =>
+                            (int) $item->quantity,
+
+                            'unit_price_usd' =>
+                            (float) $item
+                                ->unit_price_usd,
+
+                            'unit_cost_usd' =>
+                            (float) $item
+                                ->unit_cost_usd,
+
+                            'unit_profit_usd' =>
+                            (float) $item
+                                ->unit_profit_usd,
+
+                            'total_usd' =>
+                            (float) $item
+                                ->total_usd,
+
+                            'total_profit_usd' =>
+                            (float) $item
+                                ->total_profit_usd,
+                        ]
+                    )
+                    ->values()
+                    ->all(),
+            ];
+
+            /*
+         * Agrupa cantidades por producto para que
+         * la reversión también funcione cuando una
+         * venta tenga varios artículos.
+         */
+            $quantitiesByProduct = $items
+                ->groupBy('product_id')
+                ->map(
+                    fn(Collection $productItems) =>
+                    (int) $productItems->sum(
+                        'quantity'
+                    )
+                );
+
+            $products = Product::query()
+                ->whereIn(
+                    'id',
+                    $quantitiesByProduct
+                        ->keys()
+                        ->all()
+                )
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach (
+                $quantitiesByProduct
+                as $productId => $quantity
+            ) {
+                $product = $products->get(
+                    (int) $productId
+                );
+
+                if (! $product) {
+                    throw ValidationException::withMessages([
+                        'cancellation_reason' =>
+                        'No fue posible localizar uno de los productos asociados con la venta.',
+                    ]);
+                }
+
+                $product->current_stock =
+                    (int) $product->current_stock
+                    + (int) $quantity;
+
+                $product->save();
+
+                InventoryMovement::create([
+                    'product_id' =>
+                    $product->id,
+
+                    'movementable_type' =>
+                    Sale::class,
+
+                    'movementable_id' =>
+                    $lockedSale->id,
+
+                    'type' =>
+                    'adjustment_in',
+
+                    'quantity' =>
+                    (int) $quantity,
+
+                    'stock_after_movement' =>
+                    $product->current_stock,
+
+                    'movement_date' =>
+                    now()->toDateString(),
+
+                    'notes' =>
+                    'Reversión por anulación de la venta #'
+                        . $lockedSale->id
+                        . '. Motivo: '
+                        . $validated['cancellation_reason'],
+                ]);
+            }
+
+            $lockedSale->update([
+                'status' =>
+                Sale::STATUS_CANCELLED,
+
+                'cancelled_at' =>
+                now(),
+
+                'cancelled_by' =>
+                $request->user()->id,
+
+                'cancellation_reason' =>
+                $validated['cancellation_reason'],
+            ]);
+
+            SaleLog::create([
+                'sale_id' =>
+                $lockedSale->id,
+
+                'user_id' =>
+                $request->user()->id,
+
+                'action' =>
+                'cancelled',
+
+                'reason' =>
+                $validated['cancellation_reason'],
+
+                'previous_data' =>
+                $previousData,
+            ]);
+        });
+
+        return redirect()
+            ->route('sales.index')
+            ->with(
+                'success',
+                'Venta anulada correctamente. El inventario fue restituido.'
             );
     }
 

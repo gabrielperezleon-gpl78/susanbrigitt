@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\ExchangeRate;
 use App\Models\Product;
+use App\Models\Sale;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -357,6 +358,10 @@ class ReportsController extends Controller
                 '=',
                 'products.brand_id'
             )
+            ->where(
+                'sales.status',
+                Sale::STATUS_CONFIRMED
+            )
             ->whereBetween(
                 'sales.sale_date',
                 [
@@ -565,6 +570,10 @@ class ReportsController extends Controller
                 'products.id',
                 '=',
                 'sale_items.product_id'
+            )
+            ->where(
+                'sales.status',
+                Sale::STATUS_CONFIRMED
             )
             ->whereBetween(
                 'sales.sale_date',

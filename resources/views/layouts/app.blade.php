@@ -9,9 +9,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-[#F8F5F2] text-[#171717]" x-data="{ sidebarOpen: true }">
+<body
+    class="min-h-screen overflow-x-hidden bg-[#F8F5F2] text-[#171717]"
+    x-data="{ sidebarOpen: true }">
 
-    <div class="flex min-h-screen">
+    <div class="min-h-screen">
 
         <aside
             class="fixed left-0 top-0 z-30 flex h-screen flex-col bg-[#17191D] text-white transition-all duration-300"
@@ -142,13 +144,13 @@
         </aside>
 
         <main
-            class="min-h-screen flex-1 transition-all duration-300"
+            class="min-h-screen min-w-0 transition-all duration-300"
             :class="sidebarOpen ? 'ml-64' : 'ml-20'">
 
             <header class="sticky top-0 z-20 border-b border-black/5 bg-[#F8F5F2]/90 backdrop-blur">
-                <div class="flex items-center justify-between px-8 py-5">
+                <div class="flex flex-col gap-4 px-8 py-5 xl:flex-row xl:items-center xl:justify-between">
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex min-w-0 items-center gap-4">
                         <button
                             type="button"
                             @click="sidebarOpen = !sidebarOpen"
@@ -184,7 +186,7 @@
                     $headerBinanceRate = $headerExchangeRate?->binance_rate ?? $headerExchangeRate?->used_rate;
                     @endphp
 
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-3 xl:justify-end">
 
                         <div class="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm shadow-sm">
                             {{ $headerDate }} · {{ $headerTime }}
@@ -215,7 +217,7 @@
                 </div>
             </header>
 
-            <div class="p-8">
+            <div class="min-w-0 max-w-full p-8">
                 @yield('content')
             </div>
 

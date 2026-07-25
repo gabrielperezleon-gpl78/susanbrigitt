@@ -30,11 +30,19 @@ class ExchangeRateController extends Controller
             ->avg('used_rate');
 
         $binanceRates = $exchangeRates
-            ->where('source', 'binance')
+            ->filter(
+                fn(ExchangeRate $exchangeRate) =>
+                $exchangeRate->binance_rate !== null
+                    && (float) $exchangeRate->binance_rate > 0
+            )
             ->count();
 
         $manualRates = $exchangeRates
-            ->where('source', 'manual')
+            ->filter(
+                fn(ExchangeRate $exchangeRate) =>
+                $exchangeRate->manual_rate !== null
+                    && (float) $exchangeRate->manual_rate > 0
+            )
             ->count();
 
         return view('exchange-rates.index', compact(

@@ -14,57 +14,105 @@ class DashboardController extends Controller
     {
         $totalProducts = Product::count();
 
-        $availableUnits = Product::sum('current_stock');
+        $availableUnits = Product::sum(
+            'current_stock'
+        );
 
         $lowStockProducts = Product::query()
-            ->whereColumn('current_stock', '<=', 'minimum_stock')
+            ->whereColumn(
+                'current_stock',
+                '<=',
+                'minimum_stock'
+            )
             ->count();
 
         $outOfStockProducts = Product::query()
-            ->where('current_stock', '<=', 0)
+            ->where(
+                'current_stock',
+                '<=',
+                0
+            )
             ->count();
 
         $inventoryValue = Product::query()
-            ->selectRaw('SUM(current_stock * purchase_price_usd) as total')
+            ->selectRaw(
+                'SUM(
+                    current_stock *
+                    purchase_price_usd
+                ) as total'
+            )
             ->value('total') ?? 0;
 
-        $totalPurchasesUsd = Purchase::sum('total_usd');
-        $totalPurchasesBs = Purchase::sum('total_bs');
+        $totalPurchasesUsd = Purchase::sum(
+            'total_usd'
+        );
 
-        $totalSalesUsd = Sale::sum('total_usd');
-        $totalSalesBs = Sale::sum('total_bs');
-        $estimatedProfitUsd = Sale::sum('estimated_profit_usd');
+        $totalPurchasesBs = Purchase::sum(
+            'total_bs'
+        );
 
-        $todaySalesUsd = Sale::query()
-            ->whereDate('sale_date', now()->toDateString())
+        /*
+         * Solamente las ventas confirmadas participan
+         * en los indicadores financieros.
+         */
+        $totalSalesUsd = Sale::confirmed()
             ->sum('total_usd');
 
-        $todaySalesCount = Sale::query()
-            ->whereDate('sale_date', now()->toDateString())
+        $totalSalesBs = Sale::confirmed()
+            ->sum('total_bs');
+
+        $estimatedProfitUsd = Sale::confirmed()
+            ->sum('estimated_profit_usd');
+
+        $todaySalesUsd = Sale::confirmed()
+            ->whereDate(
+                'sale_date',
+                now()->toDateString()
+            )
+            ->sum('total_usd');
+
+        $todaySalesCount = Sale::confirmed()
+            ->whereDate(
+                'sale_date',
+                now()->toDateString()
+            )
             ->count();
 
         $latestExchangeRate = ExchangeRate::query()
             ->where('status', 'active')
             ->orderByDesc('rate_date')
+            ->orderByDesc('rate_time')
             ->orderByDesc('id')
             ->first();
 
         $recentProducts = Product::query()
-            ->with(['brand', 'tone'])
+            ->with([
+                'brand',
+                'tone',
+            ])
             ->latest()
             ->limit(5)
             ->get();
 
-        $recentSales = Sale::query()
-            ->with(['items.product'])
+        $recentSales = Sale::confirmed()
+            ->with([
+                'items.product',
+            ])
             ->latest('sale_date')
             ->latest('id')
             ->limit(5)
             ->get();
 
         $lowStockList = Product::query()
-            ->with(['brand', 'tone'])
-            ->whereColumn('current_stock', '<=', 'minimum_stock')
+            ->with([
+                'brand',
+                'tone',
+            ])
+            ->whereColumn(
+                'current_stock',
+                '<=',
+                'minimum_stock'
+            )
             ->orderBy('current_stock')
             ->limit(5)
             ->get();

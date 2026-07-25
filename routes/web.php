@@ -125,6 +125,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/ventas/{sale}', [SaleController::class, 'update'])
         ->name('sales.update');
 
+    Route::patch(
+        '/ventas/{sale}/anular',
+        [SaleController::class, 'cancel']
+    )->name('sales.cancel');
+
     /*
     |--------------------------------------------------------------------------
     | Tasas de cambio
