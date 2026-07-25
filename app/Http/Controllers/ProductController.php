@@ -15,29 +15,143 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $products = Product::with(['category', 'brand', 'tone', 'unitMeasure', 'supplier'])
+        $search = trim(
+            $request->string('search')->toString()
+        );
+
+        $brandId = $request->integer('brand_id') ?: null;
+        $toneId = $request->integer('tone_id') ?: null;
+        $categoryId = $request->integer('category_id') ?: null;
+
+        $stockStatus = $request
+            ->string('stock_status')
+            ->toString();
+
+        $products = Product::query()
+            ->with([
+                'category',
+                'brand',
+                'tone',
+                'unitMeasure',
+                'supplier',
+            ])
+            ->when(
+                $search !== '',
+                function ($query) use ($search) {
+                    $query->where(function ($subquery) use ($search) {
+                        $subquery
+                            ->where(
+                                'name',
+                                'like',
+                                '%' . $search . '%'
+                            )
+                            ->orWhere(
+                                'internal_code',
+                                'like',
+                                '%' . $search . '%'
+                            )
+                            ->orWhere(
+                                'barcode',
+                                'like',
+                                '%' . $search . '%'
+                            );
+                    });
+                }
+            )
+            ->when(
+                $brandId,
+                fn($query) =>
+                $query->where('brand_id', $brandId)
+            )
+            ->when(
+                $toneId,
+                fn($query) =>
+                $query->where('tone_id', $toneId)
+            )
+            ->when(
+                $categoryId,
+                fn($query) =>
+                $query->where('category_id', $categoryId)
+            )
+            ->when(
+                $stockStatus === 'available',
+                fn($query) =>
+                $query->whereColumn(
+                    'current_stock',
+                    '>',
+                    'minimum_stock'
+                )
+            )
+            ->when(
+                $stockStatus === 'low',
+                fn($query) =>
+                $query
+                    ->where('current_stock', '>', 0)
+                    ->whereColumn(
+                        'current_stock',
+                        '<=',
+                        'minimum_stock'
+                    )
+            )
+            ->when(
+                $stockStatus === 'out',
+                fn($query) =>
+                $query->where('current_stock', '<=', 0)
+            )
             ->latest()
             ->get();
 
-        $totalProducts = Product::count();
+        $activeProductsQuery = Product::query()
+            ->where('status', 'active');
 
-        $availableUnits = Product::sum('current_stock');
+        $totalProducts = (clone $activeProductsQuery)
+            ->count();
 
-        $outOfStockProducts = Product::where('current_stock', '<=', 0)->count();
+        $availableUnits = (clone $activeProductsQuery)
+            ->sum('current_stock');
 
-        $inventoryValue = Product::query()
-            ->selectRaw('SUM(current_stock * purchase_price_usd) as total')
-            ->value('total') ?? 0;
+        $outOfStockProducts = (clone $activeProductsQuery)
+            ->where('current_stock', '<=', 0)
+            ->count();
 
-        return view('products.index', [
-            'products' => $products,
-            'totalProducts' => $totalProducts,
-            'availableUnits' => $availableUnits,
-            'outOfStockProducts' => $outOfStockProducts,
-            'inventoryValue' => $inventoryValue,
-        ]);
+        $inventoryValue = (float) (
+            (clone $activeProductsQuery)
+            ->selectRaw(
+                'COALESCE(
+                    SUM(current_stock * purchase_price_usd),
+                    0
+                ) as total'
+            )
+            ->value('total')
+        );
+
+        $brands = Brand::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $tones = Tone::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('products.index', compact(
+            'products',
+            'totalProducts',
+            'availableUnits',
+            'outOfStockProducts',
+            'inventoryValue',
+            'brands',
+            'tones',
+            'categories'
+        ));
     }
 
     public function create(): View

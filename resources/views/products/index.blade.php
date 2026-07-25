@@ -50,44 +50,178 @@
 
 <section class="mt-6 rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
 
-    <div class="mb-6 grid gap-4 md:grid-cols-5">
+    <form
+        method="GET"
+        action="{{ route('products.index') }}"
+        class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <div class="xl:col-span-2">
+            <label
+                for="search"
+                class="sr-only">
+                Buscar producto
+            </label>
 
-        <input type="text"
-            placeholder="Buscar producto..."
-            class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+            <input
+                id="search"
+                name="search"
+                type="text"
+                value="{{ request('search') }}"
+                placeholder="Buscar por producto, código o barra..."
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+        </div>
 
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Marca</option>
-            <option>Vogue</option>
-            <option>Valmy</option>
-            <option>Maybelline</option>
-        </select>
+        <div>
+            <label
+                for="brand_id"
+                class="sr-only">
+                Marca
+            </label>
 
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Tono</option>
-            <option>Beige claro</option>
-            <option>Rojo intenso</option>
-            <option>Negro</option>
-        </select>
+            <select
+                id="brand_id"
+                name="brand_id"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <option value="">
+                    Todas las marcas
+                </option>
 
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Categoría</option>
-            <option>Maquillaje</option>
-            <option>Cuidado facial</option>
-            <option>Cuidado labial</option>
-        </select>
+                @foreach ($brands as $brand)
+                <option
+                    value="{{ $brand->id }}"
+                    @selected(
+                    (string) request('brand_id')===(string) $brand->id
+                    )
+                    >
+                    {{ $brand->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
 
-        <select class="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
-            <option>Estado</option>
-            <option>Disponible</option>
-            <option>Stock bajo</option>
-            <option>Agotado</option>
-        </select>
+        <div>
+            <label
+                for="tone_id"
+                class="sr-only">
+                Tono
+            </label>
 
-    </div>
+            <select
+                id="tone_id"
+                name="tone_id"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <option value="">
+                    Todos los tonos
+                </option>
 
-    <div class="overflow-hidden rounded-xl border border-black/5">
-        <table class="min-w-262.5 w-full text-left text-sm">
+                @foreach ($tones as $tone)
+                <option
+                    value="{{ $tone->id }}"
+                    @selected(
+                    (string) request('tone_id')===(string) $tone->id
+                    )
+                    >
+                    {{ $tone->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label
+                for="category_id"
+                class="sr-only">
+                Categoría
+            </label>
+
+            <select
+                id="category_id"
+                name="category_id"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <option value="">
+                    Todas las categorías
+                </option>
+
+                @foreach ($categories as $category)
+                <option
+                    value="{{ $category->id }}"
+                    @selected(
+                    (string) request('category_id')===(string) $category->id
+                    )
+                    >
+                    {{ $category->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label
+                for="stock_status"
+                class="sr-only">
+                Estado del stock
+            </label>
+
+            <select
+                id="stock_status"
+                name="stock_status"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                <option value="">
+                    Todos los estados
+                </option>
+
+                <option
+                    value="available"
+                    @selected(
+                    request('stock_status')==='available'
+                    )>
+                    Disponible
+                </option>
+
+                <option
+                    value="low"
+                    @selected(
+                    request('stock_status')==='low'
+                    )>
+                    Stock bajo
+                </option>
+
+                <option
+                    value="out"
+                    @selected(
+                    request('stock_status')==='out'
+                    )>
+                    Agotado
+                </option>
+            </select>
+        </div>
+
+        <div class="flex gap-2 md:col-span-2 xl:col-span-6 xl:justify-end">
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700">
+                Aplicar filtros
+            </button>
+
+            @if (
+            request()->hasAny([
+            'search',
+            'brand_id',
+            'tone_id',
+            'category_id',
+            'stock_status',
+            ])
+            )
+            <a
+                href="{{ route('products.index') }}"
+                class="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50">
+                Limpiar
+            </a>
+            @endif
+        </div>
+    </form>
+
+    <div class="overflow-x-auto rounded-xl border border-black/5">
+        <table class="min-w-[1100px] w-full text-left text-sm">
             <thead class="bg-[#F8F5F2] text-gray-500">
                 <tr>
                     <th class="whitespace-nowrap px-5 py-4">Código</th>
@@ -145,19 +279,24 @@
                     </td>
 
                     <td class="px-5 py-4">
-                        @if ($product->stock_status === 'agotado')
-                        <span class="whitespace-nowrap rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                        @php
+                        $currentStock = (int) $product->current_stock;
+                        $minimumStock = (int) $product->minimum_stock;
+                        @endphp
+
+                        @if ($currentStock <= 0)
+                            <span class="whitespace-nowrap rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                             Agotado
-                        </span>
-                        @elseif ($product->stock_status === 'stock_bajo')
-                        <span class="whitespace-nowrap rounded-full bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
-                            Stock bajo
-                        </span>
-                        @else
-                        <span class="whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                            Disponible
-                        </span>
-                        @endif
+                            </span>
+                            @elseif ($currentStock <= $minimumStock)
+                                <span class="whitespace-nowrap rounded-full bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
+                                Stock bajo
+                                </span>
+                                @else
+                                <span class="whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                                    Disponible
+                                </span>
+                                @endif
                     </td>
 
                     <td class="px-5 py-4">
