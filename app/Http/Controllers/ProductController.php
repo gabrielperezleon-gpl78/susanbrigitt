@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\UnitMeasure;
 use App\Models\Supplier;
 use App\Models\Tone;
+use App\Models\UnitMeasure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -203,7 +206,7 @@ class ProductController extends Controller
             'tone_id' => ['nullable', 'exists:tones,id'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code'],
+            'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code'],
             'name' => ['required', 'string', 'max:180'],
             'barcode' => ['nullable', 'string', 'max:120', 'unique:products,barcode'],
             'description' => ['nullable', 'string', 'max:1500'],
@@ -226,29 +229,42 @@ class ProductController extends Controller
 
         $slug = $this->generateUniqueSlug($validated['name']);
 
-        Product::create([
-            'category_id' => $validated['category_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
-            'tone_id' => $validated['tone_id'] ?? null,
-            'unit_measure_id' => $validated['unit_measure_id'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'internal_code' => $validated['internal_code'] ?? null,
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'barcode' => $validated['barcode'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'image_path' => null,
-            'purchase_price_usd' => $purchasePriceUsd,
-            'sale_price_usd' => $salePriceUsd,
-            'unit_profit_usd' => $unitProfitUsd,
-            'profit_margin' => $profitMargin,
-            'initial_stock' => (int) $validated['initial_stock'],
-            'current_stock' => (int) $validated['initial_stock'],
-            'minimum_stock' => (int) $validated['minimum_stock'],
-            'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
-            'status' => $validated['status'],
-            'internal_notes' => $validated['internal_notes'] ?? null,
-        ]);
+        DB::transaction(function () use ($validated, $purchasePriceUsd, $salePriceUsd, $unitProfitUsd, $profitMargin, $slug) {
+            $product = Product::create([
+                'category_id' => $validated['category_id'] ?? null,
+                'brand_id' => $validated['brand_id'] ?? null,
+                'tone_id' => $validated['tone_id'] ?? null,
+                'unit_measure_id' => $validated['unit_measure_id'] ?? null,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'internal_code' => $validated['internal_code'],
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'barcode' => $validated['barcode'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'image_path' => null,
+                'purchase_price_usd' => $purchasePriceUsd,
+                'sale_price_usd' => $salePriceUsd,
+                'unit_profit_usd' => $unitProfitUsd,
+                'profit_margin' => $profitMargin,
+                'initial_stock' => (int) $validated['initial_stock'],
+                'current_stock' => (int) $validated['initial_stock'],
+                'minimum_stock' => (int) $validated['minimum_stock'],
+                'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
+                'status' => $validated['status'],
+                'internal_notes' => $validated['internal_notes'] ?? null,
+            ]);
+
+            if ($product->initial_stock > 0) {
+                InventoryMovement::create([
+                    'product_id' => $product->id,
+                    'type' => 'initial',
+                    'quantity' => $product->initial_stock,
+                    'stock_after_movement' => $product->initial_stock,
+                    'movement_date' => $product->entry_date,
+                    'notes' => 'Existencias al registrar el producto.',
+                ]);
+            }
+        });
 
         return redirect()
             ->route('products.index')
@@ -265,7 +281,14 @@ class ProductController extends Controller
             'supplier',
         ]);
 
-        return view('products.show', compact('product'));
+        $recentAdjustments = InventoryMovement::query()
+            ->where('product_id', $product->id)
+            ->whereIn('type', ['adjustment_in', 'adjustment_out'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('products.show', compact('product', 'recentAdjustments'));
     }
 
     public function edit(Product $product): View
@@ -318,16 +341,13 @@ class ProductController extends Controller
             'tone_id' => ['nullable', 'exists:tones,id'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
+            'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
             'name' => ['required', 'string', 'max:180'],
             'barcode' => ['nullable', 'string', 'max:120', 'unique:products,barcode,' . $product->id],
             'description' => ['nullable', 'string', 'max:1500'],
             'purchase_price_usd' => ['required', 'numeric', 'min:0'],
             'sale_price_usd' => ['required', 'numeric', 'min:0'],
-            'initial_stock' => ['required', 'integer', 'min:0'],
-            'current_stock' => ['required', 'integer', 'min:0'],
             'minimum_stock' => ['required', 'integer', 'min:0'],
-            'entry_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
             'internal_notes' => ['nullable', 'string', 'max:1500'],
         ]);
@@ -346,7 +366,7 @@ class ProductController extends Controller
             'tone_id' => $validated['tone_id'] ?? null,
             'unit_measure_id' => $validated['unit_measure_id'] ?? null,
             'supplier_id' => $validated['supplier_id'] ?? null,
-            'internal_code' => $validated['internal_code'] ?? null,
+            'internal_code' => $validated['internal_code'],
             'name' => $validated['name'],
             'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
             'barcode' => $validated['barcode'] ?? null,
@@ -355,10 +375,7 @@ class ProductController extends Controller
             'sale_price_usd' => $salePriceUsd,
             'unit_profit_usd' => $unitProfitUsd,
             'profit_margin' => $profitMargin,
-            'initial_stock' => (int) $validated['initial_stock'],
-            'current_stock' => (int) $validated['current_stock'],
             'minimum_stock' => (int) $validated['minimum_stock'],
-            'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
             'status' => $validated['status'],
             'internal_notes' => $validated['internal_notes'] ?? null,
         ]);
@@ -366,6 +383,62 @@ class ProductController extends Controller
         return redirect()
             ->route('products.index')
             ->with('success', 'Producto actualizado correctamente.');
+    }
+
+    public function adjustStock(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'counted_stock' => ['required', 'integer', 'min:0'],
+            'expected_stock' => ['required', 'integer', 'min:0'],
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($product, $validated, $request) {
+            $lockedProduct = Product::query()
+                ->whereKey($product->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $previousStock = (int) $lockedProduct->current_stock;
+            $countedStock = (int) $validated['counted_stock'];
+
+            if ($previousStock !== (int) $validated['expected_stock']) {
+                throw ValidationException::withMessages([
+                    'counted_stock' => 'Las existencias cambiaron desde que abriste esta ficha. Actualiza la página y verifica el conteo antes de ajustar.',
+                ]);
+            }
+
+            $difference = $countedStock - $previousStock;
+
+            if ($difference === 0) {
+                throw ValidationException::withMessages([
+                    'counted_stock' => 'La cantidad contada coincide con el stock actual; no hay diferencia que ajustar.',
+                ]);
+            }
+
+            $lockedProduct->current_stock = $countedStock;
+            $lockedProduct->save();
+
+            InventoryMovement::create([
+                'product_id' => $lockedProduct->id,
+                'type' => $difference > 0 ? 'adjustment_in' : 'adjustment_out',
+                'quantity' => abs($difference),
+                'stock_after_movement' => $countedStock,
+                'movement_date' => now()->toDateString(),
+                'notes' => sprintf(
+                    'Conteo anterior: %d. Conteo físico: %d. Usuario: %s (#%d). Motivo: %s',
+                    $previousStock,
+                    $countedStock,
+                    $request->user()->name,
+                    $request->user()->id,
+                    trim($validated['reason'])
+                ),
+            ]);
+        });
+
+        return redirect()
+            ->route('products.show', $product)
+            ->with('success', 'Inventario ajustado y movimiento registrado.');
     }
 
     private function generateUniqueSlug(string $name, ?int $ignoreId = null): string

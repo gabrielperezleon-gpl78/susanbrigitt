@@ -141,7 +141,7 @@ get inventoryValue() {
 
                     <div>
                         <label for="internal_code" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Código interno
+                            Código interno <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <input
@@ -150,7 +150,8 @@ get inventoryValue() {
                             type="text"
                             value="{{ old('internal_code') }}"
                             placeholder="Ejemplo: SB-LAB-001"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
                     </div>
 
                     <div>

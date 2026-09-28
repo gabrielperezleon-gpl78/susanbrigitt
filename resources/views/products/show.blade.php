@@ -178,6 +178,55 @@
             </section>
         </aside>
     </section>
+
+    <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-zinc-900">Ajustar inventario tras un conteo físico</h2>
+        <p class="mt-2 text-sm text-zinc-600">
+            Registra la cantidad realmente contada y explica la diferencia. Las compras y ventas se registran en sus módulos correspondientes.
+        </p>
+
+        @if ($errors->any())
+            <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                @foreach ($errors->all() as $error)
+                    <p>{{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
+
+        <form action="{{ route('products.adjust-stock', $product) }}" method="POST" class="mt-5 grid gap-4 md:grid-cols-[180px_1fr_auto] md:items-end">
+            @csrf
+            <input type="hidden" name="expected_stock" value="{{ $product->current_stock }}">
+            <div>
+                <label for="counted_stock" class="mb-2 block text-sm font-semibold text-zinc-700">Cantidad contada</label>
+                <input id="counted_stock" name="counted_stock" type="number" min="0" step="1"
+                    value="{{ old('counted_stock', $product->current_stock) }}" required
+                    class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm focus:border-[#E46F8A]">
+            </div>
+            <div>
+                <label for="reason" class="mb-2 block text-sm font-semibold text-zinc-700">Motivo del ajuste</label>
+                <input id="reason" name="reason" type="text" minlength="10" maxlength="1000"
+                    value="{{ old('reason') }}" placeholder="Ejemplo: diferencia verificada en conteo físico" required
+                    class="w-full rounded-xl border border-black/10 px-4 py-3 text-sm focus:border-[#E46F8A]">
+            </div>
+            <button type="submit" class="rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white hover:bg-[#D75E7C]">
+                Guardar ajuste
+            </button>
+        </form>
+
+        @if ($recentAdjustments->isNotEmpty())
+            <h3 class="mt-8 text-sm font-bold text-zinc-900">Últimos ajustes</h3>
+            <ul class="mt-3 space-y-3">
+                @foreach ($recentAdjustments as $adjustment)
+                    <li class="rounded-xl bg-zinc-50 p-4 text-sm text-zinc-700">
+                        <span class="font-semibold">{{ $adjustment->created_at->format('d/m/Y H:i') }}:</span>
+                        {{ $adjustment->type === 'adjustment_in' ? '+' : '−' }}{{ $adjustment->quantity }} unidades.
+                        Stock resultante: {{ $adjustment->stock_after_movement }}.
+                        {{ $adjustment->notes }}
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </section>
 </div>
 
 @endsection

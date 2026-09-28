@@ -74,6 +74,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/productos/{product}', [ProductController::class, 'update'])
         ->name('products.update');
 
+    Route::post('/productos/{product}/ajustar-inventario', [ProductController::class, 'adjustStock'])
+        ->name('products.adjust-stock');
+
     /*
     |--------------------------------------------------------------------------
     | Inventario
