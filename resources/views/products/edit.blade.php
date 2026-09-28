@@ -21,7 +21,7 @@
             </h1>
 
             <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                Carga un producto con sus datos comerciales, proveedor, precios y stock inicial.
+                Corrige los datos comerciales del producto. Las existencias se ajustan desde su ficha.
             </p>
         </div>
     </div>
@@ -45,7 +45,7 @@
         x-data="{
             purchasePriceInput: @js(old('purchase_price_usd', $product->purchase_price_usd)),
             salePriceInput: @js(old('sale_price_usd', $product->sale_price_usd)),
-            initialStock: @js((int) old('initial_stock', $product->initial_stock)),
+            initialStock: @js((int) $product->initial_stock),
             
             parseDecimal(value) {
             if (value === null || value === undefined || value === '') return 0;
@@ -140,7 +140,7 @@ get inventoryValue() {
 
                     <div>
                         <label for="internal_code" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Código interno
+                            Código interno <span class="text-[#E46F8A]">*</span>
                         </label>
 
                         <input
@@ -149,7 +149,8 @@ get inventoryValue() {
                             type="text"
                             value="{{ old('internal_code', $product->internal_code) }}"
                             placeholder="Ejemplo: SB-LAB-001"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            required>
                     </div>
 
                     <div>
@@ -320,37 +321,9 @@ get inventoryValue() {
                             required>
                     </div>
 
-                    <div>
-                        <label for="initial_stock" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Stock inicial <span class="text-[#E46F8A]">*</span>
-                        </label>
-
-                        <input
-                            id="initial_stock"
-                            name="initial_stock"
-                            type="number"
-                            min="0"
-                            step="1"
-                            value="{{ old('initial_stock', $product->initial_stock) }}"
-                            x-model.number="initialStock"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            required>
-                    </div>
-
-                    <div>
-                        <label for="current_stock" class="mb-2 block text-sm font-semibold text-gray-700">
-                            Stock actual <span class="text-[#E46F8A]">*</span>
-                        </label>
-
-                        <input
-                            id="current_stock"
-                            name="current_stock"
-                            type="number"
-                            min="0"
-                            step="1"
-                            value="{{ old('current_stock', $product->current_stock) }}"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            required>
+                    <div class="rounded-xl bg-zinc-50 p-4 text-sm text-zinc-600 md:col-span-2">
+                        Stock inicial: {{ $product->initial_stock }}. Stock actual: {{ $product->current_stock }}.
+                        Para corregir existencias tras un conteo físico, utiliza el ajuste registrado en la ficha del producto.
                     </div>
 
                     <div>
@@ -374,12 +347,9 @@ get inventoryValue() {
                             Fecha de ingreso
                         </label>
 
-                        <input
-                            id="entry_date"
-                            name="entry_date"
-                            type="date"
-                            value="{{ old('entry_date', optional($product->entry_date)->format('Y-m-d')) }}"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+                        <p class="rounded-xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+                            {{ $product->entry_date?->format('d/m/Y') ?? 'No registrada' }}
+                        </p>
                     </div>
 
                     <div>
@@ -454,7 +424,7 @@ get inventoryValue() {
                 </p>
 
                 <p class="mt-2 text-sm leading-6 text-zinc-600">
-                    Ajusta los datos comerciales, precios, proveedor, unidad de medida y stock actual del producto cuando necesites corregir información.
+                    Ajusta los datos comerciales, precios, proveedor y unidad de medida. Las existencias se modifican mediante compras, ventas o un ajuste justificado.
                 </p>
             </section>
 
