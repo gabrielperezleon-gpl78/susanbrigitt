@@ -195,6 +195,16 @@
             </select>
         </div>
 
+        <div>
+            <label for="record_status" class="sr-only">Estado del registro</label>
+            <select id="record_status" name="record_status"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+                <option value="">Registros activos e inactivos</option>
+                <option value="active" @selected(request('record_status') === 'active')>Activos</option>
+                <option value="inactive" @selected(request('record_status') === 'inactive')>Inactivos para recuperar</option>
+            </select>
+        </div>
+
         <div class="flex gap-2 md:col-span-2 xl:col-span-6 xl:justify-end">
             <button
                 type="submit"
@@ -209,6 +219,7 @@
             'tone_id',
             'category_id',
             'stock_status',
+            'record_status',
             ])
             )
             <a
@@ -248,6 +259,9 @@
 
                     <td class="px-5 py-4">
                         {{ $product->name }}
+                        @if ($product->status !== 'active')
+                        <span class="block text-xs font-semibold text-zinc-500">Registro inactivo · editable</span>
+                        @endif
                     </td>
 
                     <td class="px-5 py-4">
@@ -284,7 +298,12 @@
                         $minimumStock = (int) $product->minimum_stock;
                         @endphp
 
-                        @if ($currentStock <= 0)
+                        @if ($product->status !== 'active')
+                            <span class="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">Inactivo</span>
+                            @if ($currentStock > 0)
+                            <span class="block text-xs text-zinc-500">{{ $currentStock }} unidades registradas</span>
+                            @endif
+                        @elseif ($currentStock <= 0)
                             <span class="whitespace-nowrap rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                             Agotado
                             </span>
@@ -310,7 +329,7 @@
                             <a
                                 href="{{ route('products.edit', $product) }}"
                                 class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
-                                Editar
+                                {{ $product->status === 'inactive' ? 'Editar / reactivar' : 'Editar' }}
                             </a>
                         </div>
                     </td>
