@@ -169,35 +169,35 @@ class ProductController extends Controller
             : null;
         $categories = Category::query()
             ->where(function ($query) use ($template) {
-                $query->where('is_active', true)->orWhereKey($template?->category_id);
+                $query->where('is_active', true)->orWhere('id', $template?->category_id);
             })
             ->orderBy('name')
             ->get();
 
         $brands = Brand::query()
             ->where(function ($query) use ($template) {
-                $query->where('is_active', true)->orWhereKey($template?->brand_id);
+                $query->where('is_active', true)->orWhere('id', $template?->brand_id);
             })
             ->orderBy('name')
             ->get();
 
         $tones = Tone::query()
             ->where(function ($query) use ($template) {
-                $query->where('is_active', true)->orWhereKey($template?->tone_id);
+                $query->where('is_active', true)->orWhere('id', $template?->tone_id);
             })
             ->orderBy('name')
             ->get();
 
         $unitMeasures = UnitMeasure::query()
             ->where(function ($query) use ($template) {
-                $query->where('is_active', true)->orWhereKey($template?->unit_measure_id);
+                $query->where('is_active', true)->orWhere('id', $template?->unit_measure_id);
             })
             ->orderBy('name')
             ->get();
 
         $suppliers = Supplier::query()
             ->where(function ($query) use ($template) {
-                $query->where('is_active', true)->orWhereKey($template?->supplier_id);
+                $query->where('is_active', true)->orWhere('id', $template?->supplier_id);
             })
             ->orderBy('name')
             ->get();
@@ -316,35 +316,35 @@ class ProductController extends Controller
     {
         $categories = Category::query()
             ->where(function ($query) use ($product) {
-                $query->where('is_active', true)->orWhereKey($product->category_id);
+                $query->where('is_active', true)->orWhere('id', $product->category_id);
             })
             ->orderBy('name')
             ->get();
 
         $brands = Brand::query()
             ->where(function ($query) use ($product) {
-                $query->where('is_active', true)->orWhereKey($product->brand_id);
+                $query->where('is_active', true)->orWhere('id', $product->brand_id);
             })
             ->orderBy('name')
             ->get();
 
         $tones = Tone::query()
             ->where(function ($query) use ($product) {
-                $query->where('is_active', true)->orWhereKey($product->tone_id);
+                $query->where('is_active', true)->orWhere('id', $product->tone_id);
             })
             ->orderBy('name')
             ->get();
 
         $unitMeasures = UnitMeasure::query()
             ->where(function ($query) use ($product) {
-                $query->where('is_active', true)->orWhereKey($product->unit_measure_id);
+                $query->where('is_active', true)->orWhere('id', $product->unit_measure_id);
             })
             ->orderBy('name')
             ->get();
 
         $suppliers = Supplier::query()
             ->where(function ($query) use ($product) {
-                $query->where('is_active', true)->orWhereKey($product->supplier_id);
+                $query->where('is_active', true)->orWhere('id', $product->supplier_id);
             })
             ->orderBy('name')
             ->get();
