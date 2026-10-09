@@ -219,6 +219,10 @@ get inventoryValue() {
                             </option>
                             @endforeach
                         </select>
+                        <label for="new_tone_name" class="mt-3 block text-sm font-semibold text-gray-700">Nuevo tono</label>
+                        <input id="new_tone_name" name="new_tone_name" type="text"
+                            value="{{ old('new_tone_name') }}" placeholder="Para crear uno nuevo, deja el selector en Sin tono"
+                            class="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
                     </div>
 
                     <div>
