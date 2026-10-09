@@ -21,8 +21,16 @@
             </h1>
 
             <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                Carga un producto con sus datos comerciales, proveedor, precios y stock inicial.
+                Cada combinación de producto, marca, tono y unidad tiene su propia ficha, código y existencias.
+                Busca primero si ya está registrada.
             </p>
+            <a href="{{ route('products.index') }}" class="mt-2 inline-block text-sm font-semibold text-[#E46F8A]">Buscar producto existente →</a>
+            @if ($template)
+            <p class="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-zinc-700">
+                Nueva variante de {{ $template->name }}. Selecciona el tono o la unidad y escribe un código interno distinto.
+                Las existencias y el código de barras comienzan vacíos.
+            </p>
+            @endif
         </div>
     </div>
 
@@ -43,8 +51,8 @@
         method="POST"
         class="grid gap-6 xl:grid-cols-[1fr_360px]"
         x-data="{
-            purchasePriceInput: @js(old('purchase_price_usd', '')),
-            salePriceInput: @js(old('sale_price_usd', '')),
+            purchasePriceInput: @js(old('purchase_price_usd', $template?->purchase_price_usd ?? '')),
+            salePriceInput: @js(old('sale_price_usd', $template?->sale_price_usd ?? '')),
             initialStock: @js((int) old('initial_stock', 0)),
             
             parseDecimal(value) {
@@ -79,9 +87,6 @@ get unitProfit() {
 get profitMargin() {
     if (!this.salePrice || this.salePrice <= 0) return 0;
     return (this.unitProfit / this.salePrice) * 100;
-},
-get inventoryValue() {
-    return this.purchasePrice * this.initialStock;
 },
             get inventoryValue() {
                 return this.purchasePrice * this.initialStock;
@@ -133,11 +138,13 @@ get inventoryValue() {
                             id="name"
                             name="name"
                             type="text"
-                            value="{{ old('name') }}"
-                            placeholder="Ejemplo: Labial mate rojo intenso"
+                            value="{{ old('name', $template?->name) }}"
+                            placeholder="Ejemplo: Labial mate"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
+
+                    <p class="md:col-span-2 text-xs text-zinc-500">El nombre identifica la línea; el tono y la unidad identifican cada variante. No repitas el tono en el nombre salvo que forme parte del nombre comercial.</p>
 
                     <div>
                         <label for="internal_code" class="mb-2 block text-sm font-semibold text-gray-700">
@@ -179,7 +186,7 @@ get inventoryValue() {
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin categoría</option>
                             @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" @selected(old('category_id')==$category->id)>
+                            <option value="{{ $category->id }}" @selected(old('category_id', $template?->category_id)==$category->id)>
                                 {{ $category->name }}
                             </option>
                             @endforeach
@@ -197,7 +204,7 @@ get inventoryValue() {
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin marca</option>
                             @foreach ($brands as $brand)
-                            <option value="{{ $brand->id }}" @selected(old('brand_id')==$brand->id)>
+                            <option value="{{ $brand->id }}" @selected(old('brand_id', $template?->brand_id)==$brand->id)>
                                 {{ $brand->name }}
                             </option>
                             @endforeach
@@ -215,11 +222,16 @@ get inventoryValue() {
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin tono</option>
                             @foreach ($tones as $tone)
-                            <option value="{{ $tone->id }}" @selected(old('tone_id')==$tone->id)>
+                            <option value="{{ $tone->id }}" @selected(old('tone_id', $template?->tone_id)==$tone->id)>
                                 {{ $tone->name }}
                             </option>
                             @endforeach
                         </select>
+                        <label for="new_tone_name" class="mt-3 block text-sm font-semibold text-gray-700">¿El tono todavía no existe?</label>
+                        <input id="new_tone_name" name="new_tone_name" type="text"
+                            value="{{ old('new_tone_name') }}" placeholder="Escribe el nuevo tono; deja el selector en Sin tono"
+                            class="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+                        <p class="mt-1 text-xs text-zinc-500">Se guardará también en el catálogo de tonos. Selecciona uno existente o escribe uno nuevo.</p>
                     </div>
 
                     <div>
@@ -233,7 +245,7 @@ get inventoryValue() {
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin unidad</option>
                             @foreach ($unitMeasures as $unitMeasure)
-                            <option value="{{ $unitMeasure->id }}" @selected(old('unit_measure_id')==$unitMeasure->id)>
+                            <option value="{{ $unitMeasure->id }}" @selected(old('unit_measure_id', $template?->unit_measure_id)==$unitMeasure->id)>
                                 {{ $unitMeasure->name }}
                                 @if ($unitMeasure->abbreviation)
                                 · {{ $unitMeasure->abbreviation }}
@@ -241,6 +253,7 @@ get inventoryValue() {
                             </option>
                             @endforeach
                         </select>
+                        <a href="{{ route('catalogs.index') }}" class="mt-2 inline-block text-xs font-semibold text-[#E46F8A]">Administrar unidades de medida</a>
                     </div>
 
                     <div>
@@ -254,7 +267,7 @@ get inventoryValue() {
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin proveedor</option>
                             @foreach ($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}" @selected(old('supplier_id')==$supplier->id)>
+                            <option value="{{ $supplier->id }}" @selected(old('supplier_id', $template?->supplier_id)==$supplier->id)>
                                 {{ $supplier->name }}
                             </option>
                             @endforeach
@@ -298,7 +311,7 @@ get inventoryValue() {
                             name="purchase_price_usd"
                             type="text"
                             inputmode="decimal"
-                            value="{{ old('purchase_price_usd') }}"
+                            value="{{ old('purchase_price_usd', $template?->purchase_price_usd) }}"
                             x-model="purchasePriceInput"
                             x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
@@ -315,7 +328,7 @@ get inventoryValue() {
                             name="sale_price_usd"
                             type="text"
                             inputmode="decimal"
-                            value="{{ old('sale_price_usd') }}"
+                            value="{{ old('sale_price_usd', $template?->sale_price_usd) }}"
                             x-model="salePriceInput"
                             x-on:keydown="handleDecimalKey($event)"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
@@ -337,6 +350,7 @@ get inventoryValue() {
                             x-model.number="initialStock"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
+                        <p class="mt-2 text-xs text-zinc-500">Usa cero si incorporarás estas unidades mediante una compra. Registra aquí únicamente existencias que ya estaban en inventario.</p>
                     </div>
 
                     <div>
@@ -350,7 +364,7 @@ get inventoryValue() {
                             type="number"
                             min="0"
                             step="1"
-                            value="{{ old('minimum_stock', 1) }}"
+                            value="{{ old('minimum_stock', $template?->minimum_stock ?? 1) }}"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
                             required>
                     </div>
