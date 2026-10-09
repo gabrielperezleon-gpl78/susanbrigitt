@@ -155,9 +155,10 @@ class ProductStockControlTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
         $this->post(route('products.store'), $this->productData([
-            'new_tone_name' => 'Ciruela',
+            'new_tone_name' => 'Ciruela', 'new_tone_hex' => '#AA4477',
         ]))->assertSessionHasNoErrors();
         $tone = Tone::where('name', 'Ciruela')->firstOrFail();
+        $this->assertSame('#AA4477', $tone->hex_color);
         $this->assertSame($tone->id, Product::firstOrFail()->tone_id);
 
         $this->post(route('products.store'), $this->productData([
