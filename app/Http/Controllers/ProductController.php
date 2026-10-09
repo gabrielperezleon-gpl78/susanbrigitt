@@ -109,7 +109,8 @@ class ProductController extends Controller
                 $query->where('current_stock', '<=', 0)
             )
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $activeProductsQuery = Product::query()
             ->where('status', 'active');
