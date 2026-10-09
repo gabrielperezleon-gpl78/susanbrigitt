@@ -346,6 +346,7 @@
         </table>
     </div>
 
+    <div class="mt-5">{{ $products->links() }}</div>
 </section>
 
 @endsection
