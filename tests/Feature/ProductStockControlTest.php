@@ -169,6 +169,17 @@ class ProductStockControlTest extends TestCase
         $this->assertDatabaseCount('products', 1);
     }
 
+    public function test_tone_selector_and_new_tone_cannot_be_used_together(): void
+    {
+        $tone = Tone::create(['name' => 'Rosa', 'slug' => 'rosa']);
+        $this->actingAs(User::factory()->create())
+            ->post(route('products.store'), $this->productData([
+                'tone_id' => $tone->id, 'new_tone_name' => 'Ciruela',
+            ]))->assertSessionHasErrors('new_tone_name');
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('tones', 1);
+    }
+
     public function test_copy_variant_prefills_identity_but_not_stock_or_code(): void
     {
         $product = Product::create([
