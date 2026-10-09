@@ -180,6 +180,24 @@ class ProductStockControlTest extends TestCase
             ->assertDontSee('value="SB-LAB-001"', false);
     }
 
+    public function test_inactive_product_can_be_recovered_without_resetting_stock_or_movements(): void
+    {
+        $product = Product::create([
+            'name' => 'Labial', 'slug' => 'labial',
+            'internal_code' => 'SB-LAB-001', 'initial_stock' => 6,
+            'current_stock' => 4, 'status' => 'inactive',
+        ]);
+        $this->actingAs(User::factory()->create())
+            ->put(route('products.update', $product), $this->productData([
+                'status' => 'active', 'initial_stock' => 100, 'current_stock' => 100,
+            ]))->assertSessionHasNoErrors();
+
+        $this->assertSame('active', $product->fresh()->status);
+        $this->assertSame(4, $product->fresh()->current_stock);
+        $this->assertDatabaseCount('products', 1);
+        $this->assertDatabaseCount('inventory_movements', 0);
+    }
+
     private function productData(array $overrides = []): array
     {
         return array_merge([
