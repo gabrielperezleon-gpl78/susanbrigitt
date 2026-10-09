@@ -231,6 +231,10 @@ get profitMargin() {
                         <input id="new_tone_name" name="new_tone_name" type="text"
                             value="{{ old('new_tone_name') }}" placeholder="Escribe el nuevo tono; deja el selector en Sin tono"
                             class="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+                        <label for="new_tone_hex" class="mt-2 block text-xs text-zinc-600">Color de referencia del nuevo tono</label>
+                        <input id="new_tone_hex" name="new_tone_hex" type="color"
+                            value="{{ old('new_tone_hex', '#E46F8A') }}"
+                            class="mt-1 h-10 w-20 cursor-pointer rounded border border-black/10 bg-white p-1">
                         <p class="mt-1 text-xs text-zinc-500">Se guardará también en el catálogo de tonos. Selecciona uno existente o escribe uno nuevo.</p>
                     </div>
 
