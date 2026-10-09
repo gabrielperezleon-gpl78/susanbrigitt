@@ -225,6 +225,7 @@ class ProductController extends Controller
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
             'new_tone_name' => ['nullable', 'string', 'max:180', 'prohibited_with:tone_id'],
+            'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code'],
@@ -372,6 +373,7 @@ class ProductController extends Controller
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
             'new_tone_name' => ['nullable', 'string', 'max:180', 'prohibited_with:tone_id'],
+            'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
@@ -539,6 +541,7 @@ class ProductController extends Controller
         return Tone::create([
             'name' => $name,
             'slug' => $slug,
+            'hex_color' => strtoupper($validated['new_tone_hex'] ?? '#E46F8A'),
             'is_active' => true,
         ])->id;
     }
