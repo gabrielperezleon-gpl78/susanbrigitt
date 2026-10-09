@@ -25,11 +25,12 @@
             </p>
         </div>
 
-        <a
-            href="{{ route('products.edit', $product) }}"
-            class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
-            Editar producto
-        </a>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('products.create', ['copy' => $product->id]) }}"
+                class="inline-flex items-center justify-center rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A]">Registrar otro tono o unidad</a>
+            <a href="{{ route('products.edit', $product) }}"
+                class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">Editar producto</a>
+        </div>
     </div>
 
     <section class="grid gap-6 xl:grid-cols-[1fr_360px]">
