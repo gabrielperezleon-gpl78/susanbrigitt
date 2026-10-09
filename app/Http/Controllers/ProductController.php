@@ -224,7 +224,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
-            'new_tone_name' => ['nullable', 'string', 'max:180', 'prohibited_with:tone_id'],
+            'new_tone_name' => ['nullable', 'string', 'max:180'],
             'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
@@ -240,6 +240,7 @@ class ProductController extends Controller
             'status' => ['required', 'in:active,inactive'],
             'internal_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+        $this->ensureSingleToneChoice($validated);
 
         $purchasePriceUsd = round((float) $validated['purchase_price_usd'], 2);
         $salePriceUsd = round((float) $validated['sale_price_usd'], 2);
@@ -372,7 +373,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
-            'new_tone_name' => ['nullable', 'string', 'max:180', 'prohibited_with:tone_id'],
+            'new_tone_name' => ['nullable', 'string', 'max:180'],
             'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
@@ -386,6 +387,7 @@ class ProductController extends Controller
             'status' => ['required', 'in:active,inactive'],
             'internal_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+        $this->ensureSingleToneChoice($validated);
 
         $purchasePriceUsd = round((float) $validated['purchase_price_usd'], 2);
         $salePriceUsd = round((float) $validated['sale_price_usd'], 2);
@@ -506,6 +508,15 @@ class ProductController extends Controller
             'internal_code' => trim((string) $request->input('internal_code')),
             'new_tone_name' => trim((string) $request->input('new_tone_name')),
         ]);
+    }
+
+    private function ensureSingleToneChoice(array $validated): void
+    {
+        if (!empty($validated['tone_id']) && !empty($validated['new_tone_name'])) {
+            throw ValidationException::withMessages([
+                'new_tone_name' => 'Selecciona un tono existente o escribe uno nuevo, pero no ambos.',
+            ]);
+        }
     }
 
     private function resolveTone(array $validated): ?int
