@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\InventoryMovement;
 use App\Models\Product;
+use App\Models\Tone;
+use App\Models\UnitMeasure;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -108,6 +110,74 @@ class ProductStockControlTest extends TestCase
 
         $this->assertSame(5, $product->fresh()->current_stock);
         $this->assertDatabaseCount('inventory_movements', 0);
+    }
+
+    public function test_same_product_can_have_independent_tones_and_units(): void
+    {
+        $toneA = Tone::create(['name' => 'Rosa', 'slug' => 'rosa']);
+        $toneB = Tone::create(['name' => 'Malva', 'slug' => 'malva']);
+        $unitA = UnitMeasure::create(['name' => 'Unidad', 'slug' => 'unidad']);
+        $unitB = UnitMeasure::create(['name' => 'Caja', 'slug' => 'caja']);
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('products.store'), $this->productData([
+            'tone_id' => $toneA->id, 'unit_measure_id' => $unitA->id,
+        ]))->assertSessionHasNoErrors();
+        $this->post(route('products.store'), $this->productData([
+            'internal_code' => 'SB-LAB-002', 'tone_id' => $toneB->id,
+            'unit_measure_id' => $unitA->id, 'initial_stock' => 2,
+        ]))->assertSessionHasNoErrors();
+        $this->post(route('products.store'), $this->productData([
+            'internal_code' => 'SB-LAB-003', 'tone_id' => $toneA->id,
+            'unit_measure_id' => $unitB->id, 'initial_stock' => 3,
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('products', 3);
+        $this->assertSame([6, 2, 3], Product::orderBy('id')->pluck('current_stock')->all());
+    }
+
+    public function test_duplicate_variant_is_rejected_even_when_original_is_inactive(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->post(route('products.store'), $this->productData(['status' => 'inactive']))
+            ->assertSessionHasNoErrors();
+
+        $this->post(route('products.store'), $this->productData([
+            'name' => ' labial ', 'internal_code' => 'SB-LAB-002',
+        ]))->assertSessionHasErrors('name');
+
+        $this->assertDatabaseCount('products', 1);
+        $this->get(route('products.index', ['record_status' => 'inactive']))
+            ->assertOk()->assertSee('SB-LAB-001');
+    }
+
+    public function test_new_tone_is_saved_with_product_and_duplicate_failure_rolls_back(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->post(route('products.store'), $this->productData([
+            'new_tone_name' => 'Ciruela',
+        ]))->assertSessionHasNoErrors();
+        $tone = Tone::where('name', 'Ciruela')->firstOrFail();
+        $this->assertSame($tone->id, Product::firstOrFail()->tone_id);
+
+        $this->post(route('products.store'), $this->productData([
+            'internal_code' => 'SB-LAB-002', 'new_tone_name' => 'ciruela',
+        ]))->assertSessionHasErrors('name');
+        $this->assertDatabaseCount('tones', 1);
+        $this->assertDatabaseCount('products', 1);
+    }
+
+    public function test_copy_variant_prefills_identity_but_not_stock_or_code(): void
+    {
+        $product = Product::create([
+            'name' => 'Labial', 'slug' => 'labial',
+            'internal_code' => 'SB-LAB-001', 'initial_stock' => 6,
+        ]);
+        $this->actingAs(User::factory()->create())
+            ->get(route('products.create', ['copy' => $product->id]))
+            ->assertOk()
+            ->assertSee('Nueva variante de Labial')
+            ->assertDontSee('value="SB-LAB-001"', false);
     }
 
     private function productData(array $overrides = []): array
