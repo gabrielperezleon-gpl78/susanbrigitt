@@ -427,7 +427,8 @@ $purchase->payment_method
                                 ) == $product->id
                                 )
                                 >
-                                {{ $product->name }}
+                                {{ $product->internal_code }} · {{ $product->name }}
+                                · Tono: {{ $product->tone?->name ?? 'Sin tono' }}
                                 · Stock:
                                 {{ $product->current_stock }}
                                 {{ $product->unitMeasure?->abbreviation

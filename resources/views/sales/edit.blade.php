@@ -453,7 +453,8 @@ $storedRateChoice
                                 ) == $product->id
                                 )
                                 >
-                                {{ $product->name }}
+                                {{ $product->internal_code }} · {{ $product->name }}
+                                · Tono: {{ $product->tone?->name ?? 'Sin tono' }}
                                 · Disponible:
                                 {{ $availableStock }}
                                 {{ $product->unitMeasure?->abbreviation

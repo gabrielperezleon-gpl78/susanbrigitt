@@ -25,6 +25,7 @@ class PurchaseController extends Controller
                 'supplier',
                 'exchangeRate',
                 'items.product.unitMeasure',
+                'items.product.tone',
                 'cancelledBy:id,name',
             ])
             ->latest('purchase_date')
@@ -86,7 +87,7 @@ class PurchaseController extends Controller
             ->get();
 
         $products = Product::query()
-            ->with('unitMeasure')
+            ->with(['unitMeasure', 'tone'])
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
@@ -276,7 +277,7 @@ class PurchaseController extends Controller
             ->get();
 
         $products = Product::query()
-            ->with('unitMeasure')
+            ->with(['unitMeasure', 'tone'])
             ->where(function ($query) use (
                 $purchaseItem
             ) {

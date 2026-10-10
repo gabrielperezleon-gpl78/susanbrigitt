@@ -1,4 +1,19 @@
 {
+  "resources/css/app.css": {
+    "file": "assets/app-BAhf-sbd.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DO2nEFzp.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
   "_fonts-DkuEHybc.css": {
     "file": "assets/fonts-DkuEHybc.css",
     "src": "_fonts-DkuEHybc.css"
@@ -50,20 +65,5 @@
   "_instrument-sans-600-normal-DMks36a2.woff": {
     "file": "assets/instrument-sans-600-normal-DMks36a2.woff",
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
-  },
-  "resources/css/app.css": {
-    "file": "assets/app-vxZIPyIv.css",
-    "name": "app",
-    "names": [
-      "app.css"
-    ],
-    "src": "resources/css/app.css",
-    "isEntry": true
-  },
-  "resources/js/app.js": {
-    "file": "assets/app-DO2nEFzp.js",
-    "name": "app",
-    "src": "resources/js/app.js",
-    "isEntry": true
   }
 }

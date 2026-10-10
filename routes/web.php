@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductCatalogController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/productos', [ProductController::class, 'index'])
         ->name('products.index');
 
+    Route::get('/productos/catalogo', [ProductCatalogController::class, 'index'])
+        ->name('products.catalog');
+
+    Route::get('/productos/catalogo/imprimir', [ProductCatalogController::class, 'print'])
+        ->name('products.catalog.print');
+
+    Route::get('/productos/catalogo/excel', [ProductCatalogController::class, 'xlsx'])
+        ->name('products.catalog.xlsx');
+
     Route::get('/productos/nuevo', [ProductController::class, 'create'])
         ->name('products.create');
 
@@ -73,6 +83,9 @@ Route::middleware('auth')->group(function () {
 
     Route::put('/productos/{product}', [ProductController::class, 'update'])
         ->name('products.update');
+
+    Route::post('/productos/{product}/ajustar-inventario', [ProductController::class, 'adjustStock'])
+        ->name('products.adjust-stock');
 
     /*
     |--------------------------------------------------------------------------

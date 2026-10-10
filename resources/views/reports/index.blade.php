@@ -123,7 +123,11 @@
     </form>
 </section>
 
-<section class="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+<p class="mt-6 text-sm font-semibold text-zinc-700">
+    Resumen del {{ $dateFrom->format('d/m/Y') }} al {{ $dateTo->format('d/m/Y') }}.
+    Los gráficos mensuales muestran los últimos seis meses completos, que pueden incluir fechas fuera de este período.
+</p>
+<section class="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
         <p class="text-sm text-gray-500">
             Ventas del período
@@ -495,7 +499,9 @@
                 <div>
                     <div class="mb-2 flex justify-between gap-4 text-sm">
                         <span>
-                            {{ $product->name }}
+                            {{ $product->internal_code }} · {{ $product->name }}
+
+                            · {{ $product->tone_name ?? 'Sin tono' }}
 
                             @if ($product->brand_name)
                             · {{ $product->brand_name }}

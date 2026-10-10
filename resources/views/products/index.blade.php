@@ -12,10 +12,16 @@
         </p>
     </div>
 
+    <div class="flex flex-wrap gap-3">
+    <a href="{{ route('products.catalog') }}"
+        class="inline-flex items-center justify-center rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A]">
+        Ver catálogo completo
+    </a>
     <a href="{{ route('products.create') }}"
         class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
         + Registrar producto
     </a>
+    </div>
 </div>
 
 @if (session('success'))
@@ -53,7 +59,7 @@
     <form
         method="GET"
         action="{{ route('products.index') }}"
-        class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-7">
         <div class="xl:col-span-2">
             <label
                 for="search"
@@ -195,7 +201,17 @@
             </select>
         </div>
 
-        <div class="flex gap-2 md:col-span-2 xl:col-span-6 xl:justify-end">
+        <div>
+            <label for="record_status" class="sr-only">Estado del registro</label>
+            <select id="record_status" name="record_status"
+                class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+                <option value="">Activos e inactivos</option>
+                <option value="active" @selected(request('record_status') === 'active')>Activos</option>
+                <option value="inactive" @selected(request('record_status') === 'inactive')>Inactivos para recuperar</option>
+            </select>
+        </div>
+
+        <div class="flex gap-2 md:col-span-2 xl:col-span-7 xl:justify-end">
             <button
                 type="submit"
                 class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700">
@@ -209,6 +225,7 @@
             'tone_id',
             'category_id',
             'stock_status',
+            'record_status',
             ])
             )
             <a
@@ -248,6 +265,9 @@
 
                     <td class="px-5 py-4">
                         {{ $product->name }}
+                        @if ($product->status !== 'active')
+                        <span class="block text-xs font-semibold text-zinc-500">Registro inactivo · editable</span>
+                        @endif
                     </td>
 
                     <td class="px-5 py-4">
@@ -284,7 +304,12 @@
                         $minimumStock = (int) $product->minimum_stock;
                         @endphp
 
-                        @if ($currentStock <= 0)
+                        @if ($product->status !== 'active')
+                            <span class="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">Inactivo</span>
+                            @if ($currentStock > 0)
+                            <span class="block text-xs text-zinc-500">{{ $currentStock }} unidades registradas</span>
+                            @endif
+                        @elseif ($currentStock <= 0)
                             <span class="whitespace-nowrap rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                             Agotado
                             </span>
@@ -310,7 +335,7 @@
                             <a
                                 href="{{ route('products.edit', $product) }}"
                                 class="rounded-lg border border-black/10 px-3 py-2 text-xs hover:bg-gray-50">
-                                Editar
+                                {{ $product->status === 'inactive' ? 'Editar / reactivar' : 'Editar' }}
                             </a>
                         </div>
                     </td>
@@ -327,6 +352,7 @@
         </table>
     </div>
 
+    <div class="mt-5">{{ $products->links() }}</div>
 </section>
 
 @endsection

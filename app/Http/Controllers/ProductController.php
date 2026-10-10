@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\UnitMeasure;
 use App\Models\Supplier;
 use App\Models\Tone;
+use App\Models\UnitMeasure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -25,6 +28,7 @@ class ProductController extends Controller
         $toneId = $request->integer('tone_id') ?: null;
         $categoryId = $request->integer('category_id') ?: null;
 
+        $recordStatus = $request->string('record_status')->toString();
         $stockStatus = $request
             ->string('stock_status')
             ->toString();
@@ -76,6 +80,10 @@ class ProductController extends Controller
                 $query->where('category_id', $categoryId)
             )
             ->when(
+                in_array($recordStatus, ['active', 'inactive'], true),
+                fn($query) => $query->where('status', $recordStatus)
+            )
+            ->when(
                 $stockStatus === 'available',
                 fn($query) =>
                 $query->whereColumn(
@@ -101,7 +109,8 @@ class ProductController extends Controller
                 $query->where('current_stock', '<=', 0)
             )
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $activeProductsQuery = Product::query()
             ->where('status', 'active');
@@ -133,7 +142,6 @@ class ProductController extends Controller
             ->get();
 
         $tones = Tone::query()
-            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -154,30 +162,43 @@ class ProductController extends Controller
         ));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $template = $request->filled('copy')
+            ? Product::query()->findOrFail($request->integer('copy'))
+            : null;
         $categories = Category::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($template) {
+                $query->where('is_active', true)->orWhere('id', $template?->category_id);
+            })
             ->orderBy('name')
             ->get();
 
         $brands = Brand::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($template) {
+                $query->where('is_active', true)->orWhere('id', $template?->brand_id);
+            })
             ->orderBy('name')
             ->get();
 
         $tones = Tone::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($template) {
+                $query->where('is_active', true)->orWhere('id', $template?->tone_id);
+            })
             ->orderBy('name')
             ->get();
 
         $unitMeasures = UnitMeasure::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($template) {
+                $query->where('is_active', true)->orWhere('id', $template?->unit_measure_id);
+            })
             ->orderBy('name')
             ->get();
 
         $suppliers = Supplier::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($template) {
+                $query->where('is_active', true)->orWhere('id', $template?->supplier_id);
+            })
             ->orderBy('name')
             ->get();
 
@@ -186,12 +207,14 @@ class ProductController extends Controller
             'brands',
             'tones',
             'unitMeasures',
-            'suppliers'
+            'suppliers',
+            'template'
         ));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->normalizeIdentity($request);
         $request->merge([
             'purchase_price_usd' => $this->normalizeDecimal($request->input('purchase_price_usd')),
             'sale_price_usd' => $this->normalizeDecimal($request->input('sale_price_usd')),
@@ -201,9 +224,11 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
+            'new_tone_name' => ['nullable', 'string', 'max:180'],
+            'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code'],
+            'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code'],
             'name' => ['required', 'string', 'max:180'],
             'barcode' => ['nullable', 'string', 'max:120', 'unique:products,barcode'],
             'description' => ['nullable', 'string', 'max:1500'],
@@ -215,6 +240,7 @@ class ProductController extends Controller
             'status' => ['required', 'in:active,inactive'],
             'internal_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+        $this->ensureSingleToneChoice($validated);
 
         $purchasePriceUsd = round((float) $validated['purchase_price_usd'], 2);
         $salePriceUsd = round((float) $validated['sale_price_usd'], 2);
@@ -224,31 +250,44 @@ class ProductController extends Controller
             ? round(($unitProfitUsd / $salePriceUsd) * 100, 2)
             : 0;
 
-        $slug = $this->generateUniqueSlug($validated['name']);
+        DB::transaction(function () use ($validated, $purchasePriceUsd, $salePriceUsd, $unitProfitUsd, $profitMargin) {
+            $toneId = $this->resolveTone($validated);
+            $this->ensureDistinctVariant($validated, $toneId);
+            $product = Product::create([
+                'category_id' => $validated['category_id'] ?? null,
+                'brand_id' => $validated['brand_id'] ?? null,
+                'tone_id' => $toneId,
+                'unit_measure_id' => $validated['unit_measure_id'] ?? null,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'internal_code' => $validated['internal_code'],
+                'name' => $validated['name'],
+                'slug' => $this->generateUniqueSlug($validated['name']),
+                'barcode' => $validated['barcode'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'image_path' => null,
+                'purchase_price_usd' => $purchasePriceUsd,
+                'sale_price_usd' => $salePriceUsd,
+                'unit_profit_usd' => $unitProfitUsd,
+                'profit_margin' => $profitMargin,
+                'initial_stock' => (int) $validated['initial_stock'],
+                'current_stock' => (int) $validated['initial_stock'],
+                'minimum_stock' => (int) $validated['minimum_stock'],
+                'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
+                'status' => $validated['status'],
+                'internal_notes' => $validated['internal_notes'] ?? null,
+            ]);
 
-        Product::create([
-            'category_id' => $validated['category_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
-            'tone_id' => $validated['tone_id'] ?? null,
-            'unit_measure_id' => $validated['unit_measure_id'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'internal_code' => $validated['internal_code'] ?? null,
-            'name' => $validated['name'],
-            'slug' => $slug,
-            'barcode' => $validated['barcode'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'image_path' => null,
-            'purchase_price_usd' => $purchasePriceUsd,
-            'sale_price_usd' => $salePriceUsd,
-            'unit_profit_usd' => $unitProfitUsd,
-            'profit_margin' => $profitMargin,
-            'initial_stock' => (int) $validated['initial_stock'],
-            'current_stock' => (int) $validated['initial_stock'],
-            'minimum_stock' => (int) $validated['minimum_stock'],
-            'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
-            'status' => $validated['status'],
-            'internal_notes' => $validated['internal_notes'] ?? null,
-        ]);
+            if ($product->initial_stock > 0) {
+                InventoryMovement::create([
+                    'product_id' => $product->id,
+                    'type' => 'initial',
+                    'quantity' => $product->initial_stock,
+                    'stock_after_movement' => $product->initial_stock,
+                    'movement_date' => $product->entry_date,
+                    'notes' => 'Existencias al registrar el producto.',
+                ]);
+            }
+        });
 
         return redirect()
             ->route('products.index')
@@ -265,33 +304,50 @@ class ProductController extends Controller
             'supplier',
         ]);
 
-        return view('products.show', compact('product'));
+        $recentAdjustments = InventoryMovement::query()
+            ->where('product_id', $product->id)
+            ->whereIn('type', ['adjustment_in', 'adjustment_out'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('products.show', compact('product', 'recentAdjustments'));
     }
 
     public function edit(Product $product): View
     {
         $categories = Category::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($product) {
+                $query->where('is_active', true)->orWhere('id', $product->category_id);
+            })
             ->orderBy('name')
             ->get();
 
         $brands = Brand::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($product) {
+                $query->where('is_active', true)->orWhere('id', $product->brand_id);
+            })
             ->orderBy('name')
             ->get();
 
         $tones = Tone::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($product) {
+                $query->where('is_active', true)->orWhere('id', $product->tone_id);
+            })
             ->orderBy('name')
             ->get();
 
         $unitMeasures = UnitMeasure::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($product) {
+                $query->where('is_active', true)->orWhere('id', $product->unit_measure_id);
+            })
             ->orderBy('name')
             ->get();
 
         $suppliers = Supplier::query()
-            ->where('is_active', true)
+            ->where(function ($query) use ($product) {
+                $query->where('is_active', true)->orWhere('id', $product->supplier_id);
+            })
             ->orderBy('name')
             ->get();
 
@@ -307,6 +363,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
+        $this->normalizeIdentity($request);
         $request->merge([
             'purchase_price_usd' => $this->normalizeDecimal($request->input('purchase_price_usd')),
             'sale_price_usd' => $this->normalizeDecimal($request->input('sale_price_usd')),
@@ -316,21 +373,21 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'tone_id' => ['nullable', 'exists:tones,id'],
+            'new_tone_name' => ['nullable', 'string', 'max:180'],
+            'new_tone_hex' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'unit_measure_id' => ['nullable', 'exists:unit_measures,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'internal_code' => ['nullable', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
+            'internal_code' => ['required', 'string', 'max:80', 'unique:products,internal_code,' . $product->id],
             'name' => ['required', 'string', 'max:180'],
             'barcode' => ['nullable', 'string', 'max:120', 'unique:products,barcode,' . $product->id],
             'description' => ['nullable', 'string', 'max:1500'],
             'purchase_price_usd' => ['required', 'numeric', 'min:0'],
             'sale_price_usd' => ['required', 'numeric', 'min:0'],
-            'initial_stock' => ['required', 'integer', 'min:0'],
-            'current_stock' => ['required', 'integer', 'min:0'],
             'minimum_stock' => ['required', 'integer', 'min:0'],
-            'entry_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
             'internal_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+        $this->ensureSingleToneChoice($validated);
 
         $purchasePriceUsd = round((float) $validated['purchase_price_usd'], 2);
         $salePriceUsd = round((float) $validated['sale_price_usd'], 2);
@@ -340,32 +397,89 @@ class ProductController extends Controller
             ? round(($unitProfitUsd / $salePriceUsd) * 100, 2)
             : 0;
 
-        $product->update([
-            'category_id' => $validated['category_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
-            'tone_id' => $validated['tone_id'] ?? null,
-            'unit_measure_id' => $validated['unit_measure_id'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'internal_code' => $validated['internal_code'] ?? null,
-            'name' => $validated['name'],
-            'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
-            'barcode' => $validated['barcode'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'purchase_price_usd' => $purchasePriceUsd,
-            'sale_price_usd' => $salePriceUsd,
-            'unit_profit_usd' => $unitProfitUsd,
-            'profit_margin' => $profitMargin,
-            'initial_stock' => (int) $validated['initial_stock'],
-            'current_stock' => (int) $validated['current_stock'],
-            'minimum_stock' => (int) $validated['minimum_stock'],
-            'entry_date' => $validated['entry_date'] ?? now()->toDateString(),
-            'status' => $validated['status'],
-            'internal_notes' => $validated['internal_notes'] ?? null,
-        ]);
+        DB::transaction(function () use ($product, $validated, $purchasePriceUsd, $salePriceUsd, $unitProfitUsd, $profitMargin) {
+            $toneId = $this->resolveTone($validated);
+            $this->ensureDistinctVariant($validated, $toneId, $product->id);
+            $product->update([
+                'category_id' => $validated['category_id'] ?? null,
+                'brand_id' => $validated['brand_id'] ?? null,
+                'tone_id' => $toneId,
+                'unit_measure_id' => $validated['unit_measure_id'] ?? null,
+                'supplier_id' => $validated['supplier_id'] ?? null,
+                'internal_code' => $validated['internal_code'],
+                'name' => $validated['name'],
+                'slug' => $this->generateUniqueSlug($validated['name'], $product->id),
+                'barcode' => $validated['barcode'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'purchase_price_usd' => $purchasePriceUsd,
+                'sale_price_usd' => $salePriceUsd,
+                'unit_profit_usd' => $unitProfitUsd,
+                'profit_margin' => $profitMargin,
+                'minimum_stock' => (int) $validated['minimum_stock'],
+                'status' => $validated['status'],
+                'internal_notes' => $validated['internal_notes'] ?? null,
+            ]);
+        });
 
         return redirect()
             ->route('products.index')
             ->with('success', 'Producto actualizado correctamente.');
+    }
+
+    public function adjustStock(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'counted_stock' => ['required', 'integer', 'min:0'],
+            'expected_stock' => ['required', 'integer', 'min:0'],
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($product, $validated, $request) {
+            $lockedProduct = Product::query()
+                ->whereKey($product->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $previousStock = (int) $lockedProduct->current_stock;
+            $countedStock = (int) $validated['counted_stock'];
+
+            if ($previousStock !== (int) $validated['expected_stock']) {
+                throw ValidationException::withMessages([
+                    'counted_stock' => 'Las existencias cambiaron desde que abriste esta ficha. Actualiza la página y verifica el conteo antes de ajustar.',
+                ]);
+            }
+
+            $difference = $countedStock - $previousStock;
+
+            if ($difference === 0) {
+                throw ValidationException::withMessages([
+                    'counted_stock' => 'La cantidad contada coincide con el stock actual; no hay diferencia que ajustar.',
+                ]);
+            }
+
+            $lockedProduct->current_stock = $countedStock;
+            $lockedProduct->save();
+
+            InventoryMovement::create([
+                'product_id' => $lockedProduct->id,
+                'type' => $difference > 0 ? 'adjustment_in' : 'adjustment_out',
+                'quantity' => abs($difference),
+                'stock_after_movement' => $countedStock,
+                'movement_date' => now()->toDateString(),
+                'notes' => sprintf(
+                    'Conteo anterior: %d. Conteo físico: %d. Usuario: %s (#%d). Motivo: %s',
+                    $previousStock,
+                    $countedStock,
+                    $request->user()->name,
+                    $request->user()->id,
+                    trim($validated['reason'])
+                ),
+            ]);
+        });
+
+        return redirect()
+            ->route('products.show', $product)
+            ->with('success', 'Inventario ajustado y movimiento registrado.');
     }
 
     private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
@@ -385,6 +499,80 @@ class ProductController extends Controller
         }
 
         return $slug;
+    }
+
+    private function normalizeIdentity(Request $request): void
+    {
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+            'internal_code' => trim((string) $request->input('internal_code')),
+            'new_tone_name' => trim((string) $request->input('new_tone_name')),
+        ]);
+    }
+
+    private function ensureSingleToneChoice(array $validated): void
+    {
+        if (!empty($validated['tone_id']) && !empty($validated['new_tone_name'])) {
+            throw ValidationException::withMessages([
+                'new_tone_name' => 'Selecciona un tono existente o escribe uno nuevo, pero no ambos.',
+            ]);
+        }
+    }
+
+    private function resolveTone(array $validated): ?int
+    {
+        if (!empty($validated['tone_id'])) {
+            return (int) $validated['tone_id'];
+        }
+        if (empty($validated['new_tone_name'])) {
+            return null;
+        }
+
+        $name = $validated['new_tone_name'];
+        $existing = Tone::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+        if ($existing) {
+            if (!$existing->is_active) {
+                throw ValidationException::withMessages([
+                    'new_tone_name' => 'El tono ya existe y está inactivo. Reactívalo en Catálogos antes de usarlo.',
+                ]);
+            }
+            return $existing->id;
+        }
+
+        $base = Str::slug($name);
+        $slug = $base;
+        $suffix = 2;
+        while (Tone::query()->where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return Tone::create([
+            'name' => $name,
+            'slug' => $slug,
+            'hex_color' => strtoupper($validated['new_tone_hex'] ?? '#E46F8A'),
+            'is_active' => true,
+        ])->id;
+    }
+
+    private function ensureDistinctVariant(array $validated, ?int $toneId, ?int $ignoreId = null): void
+    {
+        $query = Product::query()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($validated['name'])])
+            ->where('brand_id', $validated['brand_id'] ?? null)
+            ->where('tone_id', $toneId)
+            ->where('unit_measure_id', $validated['unit_measure_id'] ?? null);
+        if ($ignoreId !== null) {
+            $query->where('id', '!=', $ignoreId);
+        }
+        $existing = $query->first();
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'name' => "Ya existe esta combinación de nombre, marca, tono y unidad (código {$existing->internal_code}). Recupera su ficha y registra allí la compra o el ajuste.",
+            ]);
+        }
     }
 
     private function normalizeDecimal(?string $value): ?string

@@ -200,7 +200,14 @@ $paymentLabels = [
                                 @foreach ($sale->items as $item)
                                 <div>
                                     <span class="font-medium">
+                                        @if ($item->product)
+                                        {{ $item->product->internal_code }} ·
+                                        @endif
                                         {{ $item->product?->name ?? 'Producto eliminado' }}
+                                        @if ($item->product)
+                                        · {{ $item->product->tone?->name ?? 'Sin tono' }}
+                                        · {{ $item->product->unitMeasure?->abbreviation ?? $item->product->unitMeasure?->name ?? 'Sin unidad' }}
+                                        @endif
                                     </span>
 
                                     <span class="text-gray-400">
