@@ -211,17 +211,19 @@ get inventoryValue() {
                         <select
                             id="tone_id"
                             name="tone_id"
+                            onchange="if (this.value) document.getElementById('new_tone_name').value = ''"
                             class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
                             <option value="">Sin tono</option>
                             @foreach ($tones as $tone)
-                            <option value="{{ $tone->id }}" @selected(old('tone_id', $product->tone_id) == $tone->id)>
+                            <option value="{{ $tone->id }}" @selected(!old('new_tone_name') && old('tone_id', $product->tone_id) == $tone->id)>
                                 {{ $tone->name }}
                             </option>
                             @endforeach
                         </select>
                         <label for="new_tone_name" class="mt-3 block text-sm font-semibold text-gray-700">Nuevo tono</label>
                         <input id="new_tone_name" name="new_tone_name" type="text"
-                            value="{{ old('new_tone_name') }}" placeholder="Para crear uno nuevo, deja el selector en Sin tono"
+                            value="{{ old('new_tone_name') }}" placeholder="Escribe un tono nuevo"
+                            oninput="if (this.value.trim()) document.getElementById('tone_id').value = ''"
                             class="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
                         <label for="new_tone_hex" class="mt-2 block text-xs text-zinc-600">Color de referencia del nuevo tono</label>
                         <input id="new_tone_hex" name="new_tone_hex" type="color"
