@@ -30,10 +30,12 @@ class ReportsController extends Controller
                 ]),
             ],
             'date_from' => [
+                'required_if:period,custom',
                 'nullable',
                 'date_format:Y-m-d',
             ],
             'date_to' => [
+                'required_if:period,custom',
                 'nullable',
                 'date_format:Y-m-d',
                 'after_or_equal:date_from',
@@ -359,6 +361,12 @@ class ReportsController extends Controller
                 '=',
                 'products.brand_id'
             )
+            ->leftJoin(
+                'tones',
+                'tones.id',
+                '=',
+                'products.tone_id'
+            )
             ->where(
                 'sales.status',
                 Sale::STATUS_CONFIRMED
@@ -379,8 +387,10 @@ class ReportsController extends Controller
             )
             ->select([
                 'products.id',
+                'products.internal_code',
                 'products.name',
                 'brands.name as brand_name',
+                'tones.name as tone_name',
             ])
             ->selectRaw(
                 'SUM(sale_items.quantity) AS units_sold'
@@ -390,8 +400,10 @@ class ReportsController extends Controller
             )
             ->groupBy(
                 'products.id',
+                'products.internal_code',
                 'products.name',
-                'brands.name'
+                'brands.name',
+                'tones.name'
             )
             ->orderByDesc('units_sold')
             ->limit(5)
@@ -505,6 +517,7 @@ class ReportsController extends Controller
         );
 
         if (
+            $period === 'custom' &&
             ! empty($validated['date_from']) &&
             ! empty($validated['date_to'])
         ) {
@@ -644,3 +657,4 @@ class ReportsController extends Controller
         ) * 100;
     }
 }
+
