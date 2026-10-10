@@ -53,7 +53,7 @@
     <form
         method="GET"
         action="{{ route('products.index') }}"
-        class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-7">
         <div class="xl:col-span-2">
             <label
                 for="search"
@@ -199,13 +199,13 @@
             <label for="record_status" class="sr-only">Estado del registro</label>
             <select id="record_status" name="record_status"
                 class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
-                <option value="">Registros activos e inactivos</option>
+                <option value="">Activos e inactivos</option>
                 <option value="active" @selected(request('record_status') === 'active')>Activos</option>
                 <option value="inactive" @selected(request('record_status') === 'inactive')>Inactivos para recuperar</option>
             </select>
         </div>
 
-        <div class="flex gap-2 md:col-span-2 xl:col-span-6 xl:justify-end">
+        <div class="flex gap-2 md:col-span-2 xl:col-span-7 xl:justify-end">
             <button
                 type="submit"
                 class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700">
