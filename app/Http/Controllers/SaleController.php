@@ -81,7 +81,7 @@ class SaleController extends Controller
     public function create(): View
     {
         $products = Product::query()
-            ->with('unitMeasure')
+            ->with(['unitMeasure', 'tone'])
             ->where('status', 'active')
             ->where('current_stock', '>', 0)
             ->orderBy('name')
@@ -265,7 +265,7 @@ class SaleController extends Controller
         );
 
         $products = Product::query()
-            ->with('unitMeasure')
+            ->with(['unitMeasure', 'tone'])
             ->where(function ($query) use ($saleItem) {
                 $query
                     ->where(function ($activeQuery) {

@@ -37,6 +37,23 @@ class ProductCatalogExportTest extends TestCase
             ->assertOk()->assertSee('PR-LAB-002')->assertDontSee('PR-LAB-001');
     }
 
+    public function test_purchase_and_sale_selectors_identify_variant_by_code_and_tone(): void
+    {
+        $tone = Tone::create(['name' => 'Ciruela', 'slug' => 'ciruela']);
+        Product::create(['internal_code' => 'PR-LAB-001', 'name' => 'Labial mate',
+            'slug' => 'labial-ciruela', 'tone_id' => $tone->id, 'current_stock' => 2]);
+        Product::create(['internal_code' => 'PR-LAB-002', 'name' => 'Labial mate',
+            'slug' => 'labial-otro', 'current_stock' => 2]);
+
+        $this->actingAs(User::factory()->create());
+        foreach (['purchases.create', 'sales.create'] as $route) {
+            $this->get(route($route))->assertOk()
+                ->assertSee('PR-LAB-001 · Labial mate')
+                ->assertSee('Tono: Ciruela')
+                ->assertSee('PR-LAB-002 · Labial mate');
+        }
+    }
+
     public function test_print_and_excel_include_all_filtered_rows_not_only_first_page(): void
     {
         for ($i = 1; $i <= 51; $i++) {

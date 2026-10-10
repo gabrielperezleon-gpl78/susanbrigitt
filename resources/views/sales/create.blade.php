@@ -386,7 +386,8 @@ $selectedPaymentMethod = old('payment_method');
                                 old('product_id')==$product->id
                                 )
                                 >
-                                {{ $product->name }}
+                                {{ $product->internal_code }} · {{ $product->name }}
+                                · Tono: {{ $product->tone?->name ?? 'Sin tono' }}
                                 · Stock:
                                 {{ $product->current_stock }}
                                 {{ $product->unitMeasure?->abbreviation
