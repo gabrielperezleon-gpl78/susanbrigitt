@@ -25,6 +25,7 @@ class PurchaseController extends Controller
                 'supplier',
                 'exchangeRate',
                 'items.product.unitMeasure',
+                'items.product.tone',
                 'cancelledBy:id,name',
             ])
             ->latest('purchase_date')

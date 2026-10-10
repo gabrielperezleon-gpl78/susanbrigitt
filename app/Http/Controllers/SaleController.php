@@ -22,6 +22,7 @@ class SaleController extends Controller
         $sales = Sale::query()
             ->with([
                 'items.product.unitMeasure',
+                'items.product.tone',
                 'exchangeRate',
                 'cancelledBy',
             ])

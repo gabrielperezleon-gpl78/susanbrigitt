@@ -298,7 +298,13 @@
                                     ])
                                     >
                                     <span class="font-medium">
+                                        @if ($item->product)
+                                        {{ $item->product->internal_code }} ·
+                                        @endif
                                         {{ $item->product?->name ?? 'Producto eliminado' }}
+                                        @if ($item->product)
+                                        · {{ $item->product->tone?->name ?? 'Sin tono' }}
+                                        @endif
                                     </span>
 
                                     <span class="text-zinc-400">
