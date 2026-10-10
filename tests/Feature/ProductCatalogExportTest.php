@@ -51,12 +51,11 @@ class ProductCatalogExportTest extends TestCase
         $this->get(route('products.catalog.print', ['status' => 'inactive']))
             ->assertOk()->assertSee('PR-051')->assertDontSee('PR-001');
 
-        if (!class_exists(ZipArchive::class)) {
-            $this->markTestSkipped('La extensión ZIP no está disponible en este entorno.');
-        }
-
         $response = $this->get(route('products.catalog.xlsx'));
         $response->assertOk()->assertDownload();
+        if (!class_exists(ZipArchive::class)) {
+            return;
+        }
         $zip = new ZipArchive();
         $this->assertTrue($zip->open($response->baseResponse->getFile()->getPathname()) === true);
         $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
