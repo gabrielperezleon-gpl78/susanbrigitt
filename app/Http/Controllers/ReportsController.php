@@ -371,13 +371,8 @@ class ReportsController extends Controller
                 'sales.status',
                 Sale::STATUS_CONFIRMED
             )
-            ->whereBetween(
-                'sales.sale_date',
-                [
-                    $dateFrom->toDateString(),
-                    $dateTo->toDateString(),
-                ]
-            )
+            ->where('sales.sale_date', '>=', $dateFrom->toDateString())
+            ->where('sales.sale_date', '<', $dateTo->addDay()->toDateString())
             ->when(
                 $categoryId,
                 fn($query) => $query->where(
@@ -589,13 +584,8 @@ class ReportsController extends Controller
                 'sales.status',
                 Sale::STATUS_CONFIRMED
             )
-            ->whereBetween(
-                'sales.sale_date',
-                [
-                    $dateFrom->toDateString(),
-                    $dateTo->toDateString(),
-                ]
-            )
+            ->where('sales.sale_date', '>=', $dateFrom->toDateString())
+            ->where('sales.sale_date', '<', $dateTo->addDay()->toDateString())
             ->when(
                 $categoryId,
                 fn($query) => $query->where(
@@ -627,13 +617,8 @@ class ReportsController extends Controller
                 'purchases.status',
                 Purchase::STATUS_CONFIRMED
             )
-            ->whereBetween(
-                'purchases.purchase_date',
-                [
-                    $dateFrom->toDateString(),
-                    $dateTo->toDateString(),
-                ]
-            )
+            ->where('purchases.purchase_date', '>=', $dateFrom->toDateString())
+            ->where('purchases.purchase_date', '<', $dateTo->addDay()->toDateString())
             ->when(
                 $categoryId,
                 fn($query) => $query->where(
