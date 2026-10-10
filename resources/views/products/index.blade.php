@@ -12,10 +12,16 @@
         </p>
     </div>
 
+    <div class="flex flex-wrap gap-3">
+    <a href="{{ route('products.catalog') }}"
+        class="inline-flex items-center justify-center rounded-xl border border-[#E46F8A] px-5 py-3 text-sm font-semibold text-[#E46F8A]">
+        Ver catálogo completo
+    </a>
     <a href="{{ route('products.create') }}"
         class="inline-flex items-center justify-center rounded-xl bg-[#E46F8A] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#D75E7C]">
         + Registrar producto
     </a>
+    </div>
 </div>
 
 @if (session('success'))
