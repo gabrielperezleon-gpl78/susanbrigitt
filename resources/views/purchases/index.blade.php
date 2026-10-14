@@ -216,6 +216,7 @@
                     $rateSourceLabel = match ($purchase->rate_source) {
                     'bcv' => 'BCV',
                     'binance' => 'Binance',
+                    'euro' => 'Euro',
                     'manual' => 'Manual',
                     default => '—',
                     };

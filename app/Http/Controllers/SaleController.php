@@ -837,7 +837,7 @@ class SaleController extends Controller
             'exchange_rate_choice' => [
                 'required',
                 'string',
-                'regex:/^\d+\|(bcv|binance|manual)$/',
+                'regex:/^\d+\|(bcv|binance|euro|manual)$/',
             ],
             'payment_method' => [
                 'required',
@@ -894,6 +894,10 @@ class SaleController extends Controller
             'bcv' => [
                 'field' => 'bcv_rate',
                 'label' => 'BCV',
+            ],
+            'euro' => [
+                'field' => 'euro_rate',
+                'label' => 'Euro',
             ],
             'manual' => [
                 'field' => 'manual_rate',
@@ -998,6 +1002,7 @@ class SaleController extends Controller
         $validSources = [
             'bcv',
             'binance',
+            'euro',
             'manual',
         ];
 
@@ -1053,6 +1058,9 @@ class SaleController extends Controller
 
                 'binance' =>
                 $exchangeRate->binance_rate,
+
+                'euro' =>
+                $exchangeRate->euro_rate,
 
                 'manual' =>
                 $exchangeRate->manual_rate,

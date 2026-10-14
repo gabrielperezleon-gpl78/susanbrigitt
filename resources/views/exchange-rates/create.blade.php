@@ -21,7 +21,7 @@
             </h1>
 
             <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                Registra la tasa BCV, Binance o manual que será usada como referencia para compras y ventas.
+                Registra la tasa BCV, Binance, Euro o manual que será usada como referencia para compras y ventas.
             </p>
         </div>
     </div>
@@ -45,10 +45,12 @@
         x-data="{
             source: @js(old('source', 'binance')),
             bcvRate: @js((float) old('bcv_rate', $latestRate?->bcv_rate ?? 0)),
-            binanceRate: @js((float) old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate ?? 0)),
+            euroRate: @js((float) old('euro_rate', $latestRate?->euro_rate ?? 0)),
+            binanceRate: @js((float) old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? 0)),
             manualRate: @js((float) old('manual_rate', $latestRate?->manual_rate ?? 0)),
             get usedRate() {
     if (this.source === 'bcv') return this.parseDecimal(this.bcvRate);
+    if (this.source === 'euro') return this.parseDecimal(this.euroRate);
     if (this.source === 'manual') return this.parseDecimal(this.manualRate);
     return this.parseDecimal(this.binanceRate);
 },
@@ -177,6 +179,7 @@ handleDecimalKey(event) {
                             required>
                             <option value="binance">Binance</option>
                             <option value="bcv">BCV</option>
+                            <option value="euro">Euro</option>
                             <option value="manual">Manual</option>
                         </select>
                     </div>
@@ -210,7 +213,7 @@ handleDecimalKey(event) {
                             name="binance_rate"
                             type="text"
                             inputmode="decimal"
-                            value="{{ old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate ?? $latestRate?->used_rate) }}"
+                            value="{{ old('binance_rate', $binanceQuote['rate'] ?? $latestRate?->binance_rate) }}"
                             x-model.number="binanceRate"
                             class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm text-zinc-500 outline-none"
                             placeholder="Tasa obtenida automáticamente"
@@ -231,6 +234,27 @@ handleDecimalKey(event) {
                             {{ $binanceError }}
                         </p>
                         @endif
+                    </div>
+
+                    <div>
+                        <label for="euro_rate" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tasa Euro (Bs por unidad)
+                        </label>
+
+                        <input
+                            id="euro_rate"
+                            name="euro_rate"
+                            type="text"
+                            inputmode="decimal"
+                            value="{{ old('euro_rate', $latestRate?->euro_rate) }}"
+                            x-model="euroRate"
+                            x-on:keydown="handleDecimalKey($event)"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
+                            placeholder="Ejemplo: 275,5000">
+
+                        <p class="mt-2 text-xs leading-5 text-zinc-500">
+                            Al elegir Euro, el sistema aplica este valor directamente a los precios registrados en USD, según la práctica comercial indicada.
+                        </p>
                     </div>
 
                     <div>

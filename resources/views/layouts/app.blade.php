@@ -183,7 +183,8 @@
                     ->first();
 
                     $headerBcvRate = $headerExchangeRate?->bcv_rate;
-                    $headerBinanceRate = $headerExchangeRate?->binance_rate ?? $headerExchangeRate?->used_rate;
+                    $headerBinanceRate = $headerExchangeRate?->binance_rate;
+                    $headerEuroRate = $headerExchangeRate?->euro_rate;
                     @endphp
 
                     <div class="flex flex-wrap items-center gap-3 xl:justify-end">
@@ -203,6 +204,13 @@
                             Binance:
                             <span class="font-bold">
                                 {{ $headerBinanceRate ? number_format((float) $headerBinanceRate, 2, ',', '.') : '—' }}
+                            </span>
+                        </div>
+
+                        <div class="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm shadow-sm">
+                            Euro:
+                            <span class="font-bold">
+                                {{ $headerEuroRate ? number_format((float) $headerEuroRate, 2, ',', '.') : '—' }}
                             </span>
                         </div>
 
