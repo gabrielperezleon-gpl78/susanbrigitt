@@ -45,12 +45,17 @@ class ExchangeRateController extends Controller
             )
             ->count();
 
+        $euroRates = $exchangeRates
+            ->filter(fn(ExchangeRate $rate) => $rate->euro_rate !== null && (float) $rate->euro_rate > 0)
+            ->count();
+
         return view('exchange-rates.index', compact(
             'exchangeRates',
             'latestRate',
             'activeRates',
             'averageUsedRate',
             'binanceRates',
+            'euroRates',
             'manualRates'
         ));
     }
@@ -72,7 +77,7 @@ class ExchangeRateController extends Controller
             $binanceQuote = $binanceRateService
                 ->getUsdtVesRate('BUY', 5);
         } catch (Throwable $e) {
-            $binanceError = 'No se pudo consultar Binance en este momento. Puedes registrar una tasa BCV o manual.';
+            $binanceError = 'No se pudo consultar Binance en este momento. Puedes registrar una tasa BCV, Euro o manual.';
         }
 
         return view('exchange-rates.create', compact(
@@ -89,6 +94,9 @@ class ExchangeRateController extends Controller
         $request->merge([
             'bcv_rate' => $this->normalizeDecimal(
                 $request->input('bcv_rate')
+            ),
+            'euro_rate' => $this->normalizeDecimal(
+                $request->input('euro_rate')
             ),
             'binance_rate' => $this->normalizeDecimal(
                 $request->input('binance_rate')
@@ -110,6 +118,7 @@ class ExchangeRateController extends Controller
                 'numeric',
                 'min:0.01',
             ],
+            'euro_rate' => ['nullable', 'numeric', 'min:0.01'],
             'binance_rate' => [
                 'nullable',
                 'numeric',
@@ -122,7 +131,7 @@ class ExchangeRateController extends Controller
             ],
             'source' => [
                 'required',
-                'in:bcv,binance,manual',
+                'in:bcv,binance,euro,manual',
             ],
             'status' => [
                 'required',
@@ -148,7 +157,7 @@ class ExchangeRateController extends Controller
             } catch (Throwable $e) {
                 return back()
                     ->withErrors([
-                        'binance_rate' => 'No se pudo obtener la tasa automática de Binance. Selecciona BCV o Manual para guardar el registro.',
+                        'binance_rate' => 'No se pudo obtener la tasa automática de Binance. Selecciona BCV, Euro o Manual para guardar el registro.',
                     ])
                     ->withInput();
             }
@@ -158,6 +167,7 @@ class ExchangeRateController extends Controller
             $validated['source'],
             $validated['bcv_rate'] ?? null,
             $validated['binance_rate'] ?? null,
+            $validated['euro_rate'] ?? null,
             $validated['manual_rate'] ?? null
         );
 
@@ -174,6 +184,7 @@ class ExchangeRateController extends Controller
             'rate_time' => $validated['rate_time']
                 ?? now()->format('H:i'),
             'bcv_rate' => $validated['bcv_rate'] ?? null,
+            'euro_rate' => $validated['euro_rate'] ?? null,
             'binance_rate' => $validated['binance_rate']
                 ?? null,
             'manual_rate' => $validated['manual_rate']
@@ -245,6 +256,9 @@ class ExchangeRateController extends Controller
             'bcv_rate' => $this->normalizeDecimal(
                 $request->input('bcv_rate')
             ),
+            'euro_rate' => $this->normalizeDecimal(
+                $request->input('euro_rate')
+            ),
             'manual_rate' => $this->normalizeDecimal(
                 $request->input('manual_rate')
             ),
@@ -258,6 +272,7 @@ class ExchangeRateController extends Controller
                 'numeric',
                 'min:0.01',
             ],
+            'euro_rate' => ['nullable', 'numeric', 'min:0.01'],
             'manual_rate' => [
                 'nullable',
                 'numeric',
@@ -265,7 +280,7 @@ class ExchangeRateController extends Controller
             ],
             'source' => [
                 'required',
-                'in:bcv,binance,manual',
+                'in:bcv,binance,euro,manual',
             ],
             'status' => [
                 'required',
@@ -290,6 +305,7 @@ class ExchangeRateController extends Controller
             $validated['source'],
             $validated['bcv_rate'] ?? null,
             $binanceRate,
+            $validated['euro_rate'] ?? null,
             $validated['manual_rate'] ?? null
         );
 
@@ -307,6 +323,7 @@ class ExchangeRateController extends Controller
                 ?? $exchangeRate->rate_time?->format('H:i')
                 ?? now()->format('H:i'),
             'bcv_rate' => $validated['bcv_rate'] ?? null,
+            'euro_rate' => $validated['euro_rate'] ?? null,
             'binance_rate' => $exchangeRate->binance_rate,
             'manual_rate' => $validated['manual_rate']
                 ?? null,
@@ -328,11 +345,13 @@ class ExchangeRateController extends Controller
         string $source,
         mixed $bcvRate,
         mixed $binanceRate,
+        mixed $euroRate,
         mixed $manualRate
     ): ?float {
         $ratesBySource = [
             'bcv' => $bcvRate,
             'binance' => $binanceRate,
+            'euro' => $euroRate,
             'manual' => $manualRate,
         ];
 

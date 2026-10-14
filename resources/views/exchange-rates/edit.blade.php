@@ -22,7 +22,7 @@
         </h1>
 
         <p class="mt-2 max-w-3xl text-sm leading-6 text-zinc-500">
-            Puedes corregir la tasa BCV, registrar o modificar una tasa manual y seleccionar cuál será utilizada. El valor Binance permanece bloqueado porque corresponde a una consulta automática.
+            Puedes corregir las tasas BCV, Euro y manual y seleccionar cuál será utilizada. El valor Binance permanece bloqueado porque corresponde a una consulta automática.
         </p>
     </div>
 
@@ -47,6 +47,7 @@
         x-data="{
             source: @js(old('source', $exchangeRate->source)),
             bcvRate: @js(old('bcv_rate', $exchangeRate->bcv_rate)),
+            euroRate: @js(old('euro_rate', $exchangeRate->euro_rate)),
             binanceRate: @js($exchangeRate->binance_rate),
             manualRate: @js(old('manual_rate', $exchangeRate->manual_rate)),
 
@@ -90,6 +91,10 @@
             get usedRate() {
                 if (this.source === 'bcv') {
                     return this.parseDecimal(this.bcvRate);
+                }
+
+                if (this.source === 'euro') {
+                    return this.parseDecimal(this.euroRate);
                 }
 
                 if (this.source === 'manual') {
@@ -241,6 +246,27 @@
                     </div>
 
                     <div>
+                        <label for="euro_rate" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Tasa Euro (Bs por unidad)
+                        </label>
+
+                        <input
+                            id="euro_rate"
+                            name="euro_rate"
+                            type="text"
+                            inputmode="decimal"
+                            value="{{ old('euro_rate', $exchangeRate->euro_rate) }}"
+                            x-model="euroRate"
+                            x-on:keydown="handleDecimalKey($event)"
+                            placeholder="Ejemplo: 275,5000"
+                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10">
+
+                        <p class="mt-2 text-xs leading-5 text-zinc-500">
+                            Al elegir Euro, este valor se aplica directamente a los precios registrados en USD.
+                        </p>
+                    </div>
+
+                    <div>
                         <label
                             for="manual_rate"
                             class="mb-2 block text-sm font-semibold text-gray-700">
@@ -288,6 +314,9 @@
 
                             <option value="manual">
                                 Manual
+                            </option>
+                            <option value="euro">
+                                Euro
                             </option>
                         </select>
                     </div>

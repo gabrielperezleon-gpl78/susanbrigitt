@@ -238,6 +238,13 @@ $paymentLabels = [
                             @class([ 'whitespace-nowrap px-5 py-4 text-right' , 'line-through'=> $sale->isCancelled(),
                             ])
                             >
+                            <span class="mr-1 text-xs text-zinc-500">{{ match ($sale->rate_source) {
+                                'bcv' => 'BCV',
+                                'binance' => 'Binance',
+                                'euro' => 'Euro',
+                                'manual' => 'Manual',
+                                default => '',
+                            } }}</span>
                             {{ number_format(
                                     (float) $sale->exchange_rate_value,
                                     2,

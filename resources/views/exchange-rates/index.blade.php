@@ -17,7 +17,7 @@
             </h1>
 
             <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                Consulta las tasas BCV, Binance y manuales utilizadas para valorar compras, ventas e inventario en bolívares.
+                Consulta las tasas BCV, Binance, Euro y manuales utilizadas para valorar compras, ventas e inventario en bolívares.
             </p>
         </div>
 
@@ -34,7 +34,7 @@
     </div>
     @endif
 
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
                 Última tasa usada
@@ -72,6 +72,11 @@
         </div>
 
         <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">Euro</p>
+            <p class="mt-3 text-3xl font-semibold text-zinc-900">{{ number_format($euroRates, 0, ',', '.') }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
                 Manuales
             </p>
@@ -99,6 +104,7 @@
                         <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Fecha</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">BCV</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Binance</th>
+                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Euro</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Manual</th>
                         <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Usada</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Fuente</th>
@@ -123,6 +129,10 @@
                         </td>
 
                         <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-zinc-600">
+                            {{ $rate->euro_rate ? number_format((float) $rate->euro_rate, 2, ',', '.') : '—' }}
+                        </td>
+
+                        <td class="whitespace-nowrap px-5 py-4 text-right text-sm text-zinc-600">
                             {{ $rate->manual_rate ? number_format((float) $rate->manual_rate, 2, ',', '.') : '—' }}
                         </td>
 
@@ -135,6 +145,7 @@
                             $sourceLabels = [
                             'bcv' => 'BCV',
                             'binance' => 'Binance',
+                            'euro' => 'Euro',
                             'manual' => 'Manual',
                             ];
                             @endphp
@@ -163,7 +174,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-12 text-center">
+                        <td colspan="9" class="px-5 py-12 text-center">
                             <p class="text-sm font-semibold text-zinc-900">
                                 Todavía no hay tasas registradas.
                             </p>
