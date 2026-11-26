@@ -23,6 +23,7 @@ $initialRateChoice = old(
 'exchange_rate_choice',
 $storedRateChoice
 );
+$selectedPaymentMethod = old('payment_method', $sale->payment_method);
 @endphp
 
 <div class="space-y-8">
@@ -128,6 +129,24 @@ $storedRateChoice
                 $initialRateChoice
             ),
 
+            paymentMethod: @js($selectedPaymentMethod),
+
+            get requiresRate() {
+                return ['pago_movil', 'transferencia_bs', 'mixto'].includes(this.paymentMethod);
+            },
+
+            get showRate() {
+                return this.requiresRate || Boolean(this.selectedRateChoice);
+            },
+
+            changePaymentMethod() {
+                if (this.requiresRate) {
+                    this.syncRateSelection(false);
+                } else {
+                    this.exchangeRateChoice = '';
+                }
+            },
+
             get selectedProduct() {
                 return this.products.find(
                     product =>
@@ -183,6 +202,11 @@ $storedRateChoice
                     currentChoiceIsValid
                     && ! forceDefault
                 ) {
+                    return;
+                }
+
+                if (! this.requiresRate) {
+                    this.exchangeRateChoice = '';
                     return;
                 }
 
@@ -526,133 +550,7 @@ $storedRateChoice
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-black/5 bg-white shadow-sm">
-                <div class="border-b border-black/5 px-6 py-5">
-                    <h2 class="text-lg font-bold text-zinc-900">
-                        Pago y tasa de cambio
-                    </h2>
-
-                    <p class="mt-1 text-sm text-zinc-500">
-                        Selecciona una tasa registrada para la misma fecha de la venta.
-                    </p>
-                </div>
-
-                <div class="grid gap-5 p-6 md:grid-cols-2">
-                    <div class="md:col-span-2">
-                        <label
-                            for="exchange_rate_choice"
-                            class="mb-2 block text-sm font-semibold text-gray-700">
-                            Tasa registrada para la venta
-                            <span class="text-[#E46F8A]">*</span>
-                        </label>
-
-                        <select
-                            id="exchange_rate_choice"
-                            name="exchange_rate_choice"
-                            x-model="exchangeRateChoice"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            required>
-                            <option value="">
-                                Seleccionar tasa registrada
-                            </option>
-
-                            <template
-                                x-for="choice in ratesForSelectedDate"
-                                :key="choice.key">
-                                <option
-                                    :value="choice.key"
-                                    x-text="formatRateChoice(choice)"></option>
-                            </template>
-                        </select>
-
-                        <div
-                            class="mt-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
-                            x-show="saleDate && ratesForSelectedDate.length === 0"
-                            x-cloak>
-                            <p class="text-sm font-semibold text-red-700">
-                                No existen tasas para esta fecha.
-                            </p>
-
-                            <a
-                                href="{{ route('exchange-rates.create') }}"
-                                class="mt-2 inline-flex text-xs font-semibold text-red-700 underline">
-                                Registrar una tasa
-                            </a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Fuente seleccionada
-                        </label>
-
-                        <input
-                            type="text"
-                            :value="selectedRateChoice?.source_label || ''"
-                            placeholder="Selecciona una tasa"
-                            class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm text-zinc-500 outline-none"
-                            readonly>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-gray-700">
-                            Tasa aplicada
-                        </label>
-
-                        <input
-                            type="text"
-                            :value="
-                                selectedRateChoice
-                                    ? formatRate(
-                                        selectedRateChoice.value
-                                    )
-                                    : ''
-                            "
-                            placeholder="Selecciona una tasa"
-                            class="w-full cursor-not-allowed rounded-xl border border-black/10 bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 outline-none"
-                            readonly>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label
-                            for="payment_method"
-                            class="mb-2 block text-sm font-semibold text-gray-700">
-                            Forma de pago
-                            <span class="text-[#E46F8A]">*</span>
-                        </label>
-
-                        <select
-                            id="payment_method"
-                            name="payment_method"
-                            class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#E46F8A] focus:ring-4 focus:ring-[#E46F8A]/10"
-                            required>
-                            <option value="">
-                                Seleccionar forma de pago
-                            </option>
-
-                            @foreach ([
-                            'pago_movil' => 'Pago móvil',
-                            'transferencia_bs' => 'Transferencia Bs',
-                            'efectivo_usd' => 'Efectivo USD',
-                            'binance' => 'Binance',
-                            'zelle' => 'Zelle',
-                            'mixto' => 'Mixto',
-                            ] as $value => $label)
-                            <option
-                                value="{{ $value }}"
-                                @selected(
-                                old( 'payment_method' ,
-                                $sale->payment_method
-                                ) === $value
-                                )
-                                >
-                                {{ $label }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </section>
+            @include('partials.operation-payment', ['operationLabel' => 'venta'])
 
             <section class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-bold text-zinc-900">
@@ -708,8 +606,7 @@ $storedRateChoice
                         </span>
 
                         <strong>
-                            Bs.
-                            <span x-text="formatNumber(totalBs)"></span>
+                            <span x-text="selectedRateChoice ? 'Bs. ' + formatNumber(totalBs) : '—'"></span>
                         </strong>
                     </div>
 

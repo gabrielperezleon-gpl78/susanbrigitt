@@ -73,7 +73,7 @@
         </div>
 
         <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
-            <p class="text-sm text-gray-500">Ventas acumuladas Bs</p>
+            <p class="text-sm text-gray-500">Ventas en Bs (con tasa)</p>
             <h2 class="mt-3 text-3xl font-bold">Bs. {{ number_format($totalSalesBs, 2, ',', '.') }}</h2>
         </div>
 
@@ -197,7 +197,7 @@
             </div>
 
             <div class="rounded-2xl bg-[#F8F5F2] p-5">
-                <p class="text-sm text-gray-500">Compras acumuladas Bs</p>
+                <p class="text-sm text-gray-500">Compras en Bs (con tasa)</p>
                 <h3 class="mt-3 text-2xl font-bold">Bs. {{ number_format($totalPurchasesBs, 2, ',', '.') }}</h3>
             </div>
 

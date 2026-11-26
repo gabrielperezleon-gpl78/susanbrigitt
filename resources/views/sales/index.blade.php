@@ -101,7 +101,7 @@ $paymentLabels = [
 
         <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
             <p class="text-sm text-gray-500">
-                Total Bs
+                Equivalente Bs (con tasa)
             </p>
 
             <h2 class="mt-3 text-3xl font-bold">
@@ -245,24 +245,14 @@ $paymentLabels = [
                                 'manual' => 'Manual',
                                 default => '',
                             } }}</span>
-                            {{ number_format(
-                                    (float) $sale->exchange_rate_value,
-                                    2,
-                                    ',',
-                                    '.'
-                                ) }}
+                            {{ $sale->exchange_rate_value === null ? '—' : number_format((float) $sale->exchange_rate_value, 2, ',', '.') }}
                         </td>
 
                         <td
                             @class([ 'whitespace-nowrap px-5 py-4 text-right font-semibold' , 'line-through'=> $sale->isCancelled(),
                             ])
                             >
-                            Bs. {{ number_format(
-                                    (float) $sale->total_bs,
-                                    2,
-                                    ',',
-                                    '.'
-                                ) }}
+                            {{ $sale->total_bs === null ? '—' : 'Bs. ' . number_format((float) $sale->total_bs, 2, ',', '.') }}
                         </td>
 
                         <td
