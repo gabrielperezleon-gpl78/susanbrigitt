@@ -120,7 +120,7 @@
 
         <div class="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
             <p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
-                Total Bs.
+                Equivalente Bs (con tasa)
             </p>
 
             <p class="mt-3 text-3xl font-semibold text-zinc-900">
@@ -360,12 +360,7 @@
                             @class([ 'whitespace-nowrap px-5 py-4 text-right align-top' , 'line-through'=> $isCancelled,
                             ])
                             >
-                            {{ number_format(
-                                    (float) $purchase->exchange_rate_value,
-                                    2,
-                                    ',',
-                                    '.'
-                                ) }}
+                            {{ $purchase->exchange_rate_value === null ? '—' : number_format((float) $purchase->exchange_rate_value, 2, ',', '.') }}
                         </td>
 
                         <td
@@ -373,12 +368,7 @@
                             'text-zinc-400 line-through' => $isCancelled,
                             ])
                             >
-                            Bs. {{ number_format(
-                                    (float) $purchase->total_bs,
-                                    2,
-                                    ',',
-                                    '.'
-                                ) }}
+                            {{ $purchase->total_bs === null ? '—' : 'Bs. ' . number_format((float) $purchase->total_bs, 2, ',', '.') }}
                         </td>
 
                         <td

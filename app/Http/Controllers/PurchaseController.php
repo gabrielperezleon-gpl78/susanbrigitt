@@ -135,27 +135,25 @@ class PurchaseController extends Controller
                 2
             );
 
-            $exchangeRateValue = round(
-                $rateSelection['value'],
-                4
-            );
+            $exchangeRateValue = $rateSelection['value'] === null
+                ? null
+                : round($rateSelection['value'], 4);
 
             $totalUsd = round(
                 $quantity * $unitCostUsd,
                 2
             );
 
-            $totalBs = round(
-                $totalUsd * $exchangeRateValue,
-                2
-            );
+            $totalBs = $exchangeRateValue === null
+                ? null
+                : round($totalUsd * $exchangeRateValue, 2);
 
             $purchase = Purchase::create([
                 'supplier_id' =>
                 $validated['supplier_id'],
 
                 'exchange_rate_id' =>
-                $rateSelection['exchange_rate']->id,
+                $rateSelection['exchange_rate']?->id,
 
                 'purchase_date' =>
                 $validated['purchase_date'],
@@ -374,20 +372,18 @@ class PurchaseController extends Controller
                 2
             );
 
-            $exchangeRateValue = round(
-                $rateSelection['value'],
-                4
-            );
+            $exchangeRateValue = $rateSelection['value'] === null
+                ? null
+                : round($rateSelection['value'], 4);
 
             $totalUsd = round(
                 $newQuantity * $unitCostUsd,
                 2
             );
 
-            $totalBs = round(
-                $totalUsd * $exchangeRateValue,
-                2
-            );
+            $totalBs = $exchangeRateValue === null
+                ? null
+                : round($totalUsd * $exchangeRateValue, 2);
 
             if ($oldProductId === $newProductId) {
                 $product = Product::query()
@@ -484,7 +480,7 @@ class PurchaseController extends Controller
                 $validated['supplier_id'],
 
                 'exchange_rate_id' =>
-                $rateSelection['exchange_rate']->id,
+                $rateSelection['exchange_rate']?->id,
 
                 'purchase_date' =>
                 $validated['purchase_date'],
@@ -677,11 +673,12 @@ class PurchaseController extends Controller
                     (float) $lockedPurchase->total_usd,
 
                     'exchange_rate_value' =>
-                    (float) $lockedPurchase
-                        ->exchange_rate_value,
+                    $lockedPurchase->exchange_rate_value === null
+                        ? null : (float) $lockedPurchase->exchange_rate_value,
 
                     'total_bs' =>
-                    (float) $lockedPurchase->total_bs,
+                    $lockedPurchase->total_bs === null
+                        ? null : (float) $lockedPurchase->total_bs,
 
                     'rate_source' =>
                     $lockedPurchase->rate_source,
@@ -836,7 +833,8 @@ class PurchaseController extends Controller
             ],
 
             'exchange_rate_choice' => [
-                'required',
+                'required_if:payment_method,pago_movil,transferencia_bs,mixto',
+                'nullable',
                 'string',
                 'regex:/^\d+\|(bcv|binance|euro|manual)$/',
             ],
@@ -852,8 +850,8 @@ class PurchaseController extends Controller
                 'max:1000',
             ],
         ], [
-            'exchange_rate_choice.required' =>
-            'Debes seleccionar una tasa registrada para la compra.',
+            'exchange_rate_choice.required_if' =>
+            'Debes seleccionar una tasa registrada para pagos en bolívares o mixtos.',
 
             'exchange_rate_choice.regex' =>
             'La tasa seleccionada no tiene un formato válido.',
@@ -993,6 +991,10 @@ class PurchaseController extends Controller
         array $validated,
         ?Purchase $currentPurchase = null
     ): array {
+        if (empty($validated['exchange_rate_choice'])) {
+            return ['exchange_rate' => null, 'source' => null, 'value' => null];
+        }
+
         [$exchangeRateId, $source] = explode(
             '|',
             $validated['exchange_rate_choice'],

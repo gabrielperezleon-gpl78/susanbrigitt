@@ -158,19 +158,17 @@ class SaleController extends Controller
                 2
             );
 
-            $exchangeRateValue = round(
-                $rateSelection['value'],
-                4
-            );
+            $exchangeRateValue = $rateSelection['value'] === null
+                ? null
+                : round($rateSelection['value'], 4);
 
-            $totalBs = round(
-                $totalUsd * $exchangeRateValue,
-                2
-            );
+            $totalBs = $exchangeRateValue === null
+                ? null
+                : round($totalUsd * $exchangeRateValue, 2);
 
             $sale = Sale::create([
                 'exchange_rate_id' =>
-                $rateSelection['exchange_rate']->id,
+                $rateSelection['exchange_rate']?->id,
                 'sale_date' =>
                 $validated['sale_date'],
                 'customer_name' =>
@@ -471,19 +469,17 @@ class SaleController extends Controller
                 2
             );
 
-            $exchangeRateValue = round(
-                $rateSelection['value'],
-                4
-            );
+            $exchangeRateValue = $rateSelection['value'] === null
+                ? null
+                : round($rateSelection['value'], 4);
 
-            $totalBs = round(
-                $totalUsd * $exchangeRateValue,
-                2
-            );
+            $totalBs = $exchangeRateValue === null
+                ? null
+                : round($totalUsd * $exchangeRateValue, 2);
 
             $lockedSale->update([
                 'exchange_rate_id' =>
-                $rateSelection['exchange_rate']->id,
+                $rateSelection['exchange_rate']?->id,
                 'sale_date' =>
                 $validated['sale_date'],
                 'customer_name' =>
@@ -629,11 +625,12 @@ class SaleController extends Controller
                     (float) $lockedSale->total_usd,
 
                     'exchange_rate_value' =>
-                    (float) $lockedSale
-                        ->exchange_rate_value,
+                    $lockedSale->exchange_rate_value === null
+                        ? null : (float) $lockedSale->exchange_rate_value,
 
                     'total_bs' =>
-                    (float) $lockedSale->total_bs,
+                    $lockedSale->total_bs === null
+                        ? null : (float) $lockedSale->total_bs,
 
                     'estimated_profit_usd' =>
                     (float) $lockedSale
@@ -835,7 +832,8 @@ class SaleController extends Controller
                 'min:0.01',
             ],
             'exchange_rate_choice' => [
-                'required',
+                'required_if:payment_method,pago_movil,transferencia_bs,mixto',
+                'nullable',
                 'string',
                 'regex:/^\d+\|(bcv|binance|euro|manual)$/',
             ],
@@ -849,8 +847,8 @@ class SaleController extends Controller
                 'max:1000',
             ],
         ], [
-            'exchange_rate_choice.required' =>
-            'Debes seleccionar una tasa registrada para la venta.',
+            'exchange_rate_choice.required_if' =>
+            'Debes seleccionar una tasa registrada para pagos en bolívares o mixtos.',
 
             'exchange_rate_choice.regex' =>
             'La tasa seleccionada no tiene un formato válido.',
@@ -981,6 +979,10 @@ class SaleController extends Controller
         array $validated,
         ?Sale $currentSale = null
     ): array {
+        if (empty($validated['exchange_rate_choice'])) {
+            return ['exchange_rate' => null, 'source' => null, 'value' => null];
+        }
+
         [$exchangeRateId, $source] = explode(
             '|',
             $validated['exchange_rate_choice'],

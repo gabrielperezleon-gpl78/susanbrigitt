@@ -334,7 +334,7 @@
                             </th>
 
                             <th class="whitespace-nowrap px-5 py-4">
-                                Bs
+                                Bs (operaciones con tasa)
                             </th>
 
                             <th class="whitespace-nowrap px-5 py-4">
